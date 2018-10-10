@@ -10,6 +10,8 @@
     <!-- stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css"
         integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+        crossorigin="anonymous">
     <link rel="stylesheet" href="css/index.css">
 
     <!-- scripts -->
@@ -24,6 +26,15 @@
 </head>
 
 <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+        <div class="navbar-brand">TU Delft</div>
+
+        <form class="form-inline my-2 my-lg-0">
+            <button class="form-control mr-sm-2 btn btn-outline-primary" type="button" data-toggle="modal" data-target="#settingsModal"><i
+                    class="fas fa-sliders-h"></i></button>
+        </form>
+    </nav>
+
     <div class="container">
         <div class="card-deck">
             <div class="card">
@@ -34,6 +45,52 @@
             <div class="card">
                 <div class="card-header">Card 2</div>
                 <div class="card-body">Content</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <label for="graph-start">From</label>
+                        <div id="graph-start" class="input-group form-inline" style="margin-bottom: 10px">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                            </div>
+                            <input id="graph-start-date" type="date" class="form-control">
+                            <div class="input-group-prepend input-group-append">
+                                <span class="input-group-text"><i class="far fa-clock"></i></span>
+                            </div>
+                            <input id="graph-start-time" type="time" class="form-control">
+                        </div>
+
+                        <label for="graph-end">To</label>
+                        <div id="graph-end" class="input-group form-inline">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                            </div>
+                            <input type="date" class="form-control">
+                            <div class="input-group-prepend input-group-append">
+                                <span class="input-group-text"><i class="far fa-clock"></i></span>
+                            </div>
+                            <input type="time" class="form-control">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
             </div>
         </div>
     </div>
