@@ -10,10 +10,9 @@ unsigned long rearWheelTime = 0;
 double frontWheelVelocity = 0.0;
 
 // git demo
+// een comment
 
 int dx = 0.5; //afstand tussen beide sensoren in meter
-
-
 
 void setup() {
   Serial.begin(9600);
