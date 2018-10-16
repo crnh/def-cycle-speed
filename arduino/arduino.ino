@@ -9,7 +9,6 @@ unsigned long rearWheelTime = 0;
 
 double frontWheelVelocity = 0.0;
 
-// git demo
 // nog een comment
 // een comment
 
