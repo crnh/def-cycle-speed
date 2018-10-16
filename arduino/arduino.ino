@@ -9,8 +9,7 @@ unsigned long rearWheelTime = 0;
 
 double frontWheelVelocity = 0.0;
 
-// nog een comment
-// een comment
+
 
 int dx = 0.5; //afstand tussen beide sensoren in meter
 
