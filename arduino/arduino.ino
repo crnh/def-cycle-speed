@@ -6,10 +6,11 @@ int firstSensor;
 
 unsigned long frontWheelTime = 0;
 unsigned long rearWheelTime = 0;
+unsigned long lastInterruptTime = 0;
+
+boolean isTriggered = false;
 
 double frontWheelVelocity = 0.0;
-
-
 
 int dx = 0.5; //afstand tussen beide sensoren in meter
 
@@ -18,22 +19,32 @@ void setup() {
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(2), interrupt, FALLING);
-  //attachInterrupt(digitalPinToInterrupt(3), interrupt, RISING);
+  attachInterrupt(digitalPinToInterrupt(2), interrupt, RISING);
+  attachInterrupt(digitalPinToInterrupt(2), setDown, FALLING);
   
 
 }
 
 void loop() {
-  if(frontWheelTime - millis > 3000){ // een meting die langer duurt dan 3 seconden wordt afgebroken.
+  /*if(frontWheelTime - millis() > 3000){ // een meting die langer duurt dan 3 seconden wordt afgebroken.
     reset(); 
-  }
-  delay(100);
+  }*/
+  Serial.println("");
+  delay(50);
 }
 
 void interrupt(){
+  if(lastInterruptTime + 10 < millis() && !isTriggered ){
+    Serial.println("Triggered");
+  }
+  isTriggered = true;
+  lastInterruptTime = millis();
+}
+
+void setDown(){
   if(lastInterruptTime + 10 < millis() ){
-    Serial.println("TRIGGERED");
+    Serial.println("Not triggered");
+    isTriggered = false;
   }
   lastInterruptTime = millis();
 }
