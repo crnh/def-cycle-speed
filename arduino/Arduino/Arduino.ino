@@ -14,7 +14,7 @@ double frontWheelVelocity = 0.0;
 
 int i = 0;
 
-int dx = 0.5; //afstand tussen beide sensoren in meter
+int dx = 0.5; // distance between both sensors
 
 void setup() {
   Serial.begin(9600);
@@ -56,25 +56,26 @@ void velocityMeasure1(){
 }
 
 void velocityMeasure(int sensor){
-  if(!hasFrontWheelPassedOne){ // de fiets is voor de eerste keer gedetecteerd, de meting begint
+  if(!hasFrontWheelPassedOne){ // first detection of bike, measurement starts
     frontWheelTime = millis();
     firstSensor = sensor;
     hasFrontWheelPassedOne = true;
   }
-  else if(sensor == firstSensor){ // het achterwiel wordt voor de eerste keer gedetecteerd
+  else if(sensor == firstSensor){ // rear wheel detected for the first time
     hasRearWheelPassedOne == true;
     rearWheelTime = millis();
   }
   else{
     int dt;
-    if(hasFrontWheelPassedBoth){    //Berekening snelheid van het achterwiel.
+    if(hasFrontWheelPassedBoth){    // calculate rear wheel speed
       unsigned long rearWheelTimeTwo = millis();
       dt = rearWheelTimeTwo - rearWheelTime;
       double rearWheelVelocity = dx/dt;
-      sendVelocity((frontWheelVelocity + rearWheelVelocity)/2, 1); // de gemiddelde snelheid van voor- en achterwiel wordt doorgestuurd
-      reset(); // de meting stopt.
+      sendVelocity((frontWheelVelocity + rearWheelVelocity)/2, 1); // send average op front and rear wheel speed
+      reset(); // stop measurement
     }
-    else{ //Berekening snelheid van het voorwiel. 
+
+    else{ // calculate front wheel speed 
       hasFrontWheelPassedBoth = true;
       unsigned long frontWheelTimeTwo = millis();
       dt = frontWheelTimeTwo ;
