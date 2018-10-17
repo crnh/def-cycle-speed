@@ -6,7 +6,10 @@ int firstSensor;
 
 unsigned long frontWheelTime = 0;
 unsigned long rearWheelTime = 0;
-unsigned long lastInterruptTime = 0;
+
+unsigned long lastInterruptTime0 = 0;
+unsigned long lastInterruptTime1 = 0;
+
 
 double frontWheelVelocity = 0.0;
 
@@ -33,19 +36,25 @@ void loop() {
 }
 
 void interrupt(){
-  if(lastInterruptTime + 65 < millis()){
+  if(lastInterruptTime0 + 65 < millis()){
     Serial.println("Triggered");
-    lastInterruptTime = millis();
+    lastInterruptTime0 = millis();
   }
   
 }
 
 void velocityMeasure0(){
-  velocityMeasure(0);
+  if(lastInterruptTime0 + 65 < millis()){
+    velocityMeasure(0);
+    lastInterruptTime0 = millis();
+  }
 }
 
 void velocityMeasure1(){
-  velocityMeasure(1);
+  if(lastInterruptTime0 + 65 < millis()){
+    velocityMeasure(1);
+    lastInterruptTime0 = millis();
+  }
 }
 
 void velocityMeasure(int sensor){
