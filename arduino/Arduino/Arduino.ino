@@ -41,11 +41,17 @@ void interrupt(){
 }
 
 void velocityMeasure0(){
-  velocityMeasure(0);
+  if(lastInterruptTime0 + 65 < millis()){
+    velocityMeasure(0);
+    lastInterruptTime0 = millis();
+  }
 }
 
 void velocityMeasure1(){
-  velocityMeasure(1);
+  if(lastInterruptTime0 + 65 < millis()){
+    velocityMeasure(1);
+    lastInterruptTime0 = millis();
+  }
 }
 
 void velocityMeasure(int sensor){
