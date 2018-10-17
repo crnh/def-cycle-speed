@@ -25,7 +25,7 @@ void setup() {
 }
 
 void loop() {
-  if(frontWheelTime - millis > 3000){ // een meting die langer duurt dan 3 seconden wordt afgebroken.
+  if(frontWheelTime - millis > /*woot woot*/ 3000){ // een meting die langer duurt dan 3 seconden wordt afgebroken.
     reset(); 
   }
   delay(100);
