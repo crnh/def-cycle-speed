@@ -41,14 +41,6 @@ void interrupt(){
   lastInterruptTime = millis();
 }
 
-void setDown(){
-  if(lastInterruptTime + 10 < millis() ){
-    Serial.println("Not triggered");
-    isTriggered = false;
-  }
-  lastInterruptTime = millis();
-}
-
 void velocityMeasure0(){
   velocityMeasure(0);
 }
