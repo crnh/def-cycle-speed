@@ -8,9 +8,9 @@ unsigned long frontWheelTime = 0;
 unsigned long rearWheelTime = 0;
 unsigned long lastInterruptTime = 0;
 
-boolean isTriggered = false;
-
 double frontWheelVelocity = 0.0;
+
+int i = 0;
 
 int dx = 0.5; //afstand tussen beide sensoren in meter
 
@@ -19,10 +19,9 @@ void setup() {
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(2), interrupt, RISING);
-  attachInterrupt(digitalPinToInterrupt(2), setDown, FALLING);
+  attachInterrupt(digitalPinToInterrupt(2), interrupt, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(2), setDown, FALLING);
   
-
 }
 
 void loop() {
@@ -30,15 +29,15 @@ void loop() {
     reset(); 
   }*/
   Serial.println("");
-  delay(50);
+  delay(150);
 }
 
 void interrupt(){
-  if(lastInterruptTime + 10 < millis() && !isTriggered ){
+  if(lastInterruptTime + 65 < millis()){
     Serial.println("Triggered");
+    lastInterruptTime = millis();
   }
-  isTriggered = true;
-  lastInterruptTime = millis();
+  
 }
 
 void velocityMeasure0(){
@@ -55,21 +54,23 @@ void velocityMeasure(int sensor){
     firstSensor = sensor;
     hasFrontWheelPassedOne = true;
   }
-  else if(sensor == firstSensor){ // het acchterwiel wordt voor de eerste keer gedetecteerd
+  else if(sensor == firstSensor){ // het achterwiel wordt voor de eerste keer gedetecteerd
     hasRearWheelPassedOne == true;
     rearWheelTime = millis();
   }
   else{
     int dt;
     if(hasFrontWheelPassedBoth){    //Berekening snelheid van het achterwiel.
-      dt = millis() - rearWheelTime;
+      unsigned long rearWheelTimeTwo = millis();
+      dt = rearWheelTimeTwo - rearWheelTime;
       double rearWheelVelocity = dx/dt;
       sendVelocity((frontWheelVelocity + rearWheelVelocity)/2, 1); // de gemiddelde snelheid van voor- en achterwiel wordt doorgestuurd
       reset(); // de meting stopt.
     }
     else{ //Berekening snelheid van het voorwiel. 
       hasFrontWheelPassedBoth = true;
-      dt = millis() - frontWheelTime;
+      unsigned long frontWheelTimeTwo = millis();
+      dt = frontWheelTimeTwo ;
       frontWheelVelocity = dx/dt;
     }
   }
@@ -91,6 +92,7 @@ void reset(){
 
   frontWheelVelocity = 0.0;
 }
+
 
 
 
