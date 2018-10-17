@@ -35,6 +35,7 @@ void loop()
 
 void interrupt()
 {
+    // troll jonathan met merge conflicts
     Serial.println("TRIGGERED");
 }
 
