@@ -10,7 +10,7 @@ void callback(char *topic, byte *payload, unsigned int length)
 }
 
 boolean hasFrontWheelPassedOne = false;
-boolean hasFrontWheelPassedBoth = false;
+boolean hasFrontWheelPassedBoth = false; 
 boolean hasRearWheelPassedOne = false;
 int firstSensor;
 
@@ -22,7 +22,7 @@ unsigned long lastInterruptTime1 = 0;
 boolean isDoubleInterrupt0 = false;
 boolean isDoubleInterrupt1 = false;
 
-double dataToSend[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+String dataToSend = "";
 
 double frontWheelVelocity = 0.0;
 
@@ -67,14 +67,7 @@ void MQTTSend()
         {
             client.connect("photon");
         }
-        for (int i = 0; i < 8; i++)
-        {
-            if (dataToSend[i] != 0.0)
-            {
-                client.publish("/test", String(dataToSend[i]));
-                dataToSend[i] = 0.0;
-            }
-        }
+        client.publish("/test", dataToSend);
     }
 }
 
@@ -129,7 +122,7 @@ void velocityMeasure(int sensor)
             double rearWheelVelocity = 1000 * dx / dt;
             Serial.println(rearWheelTime);
             Serial.println(rearWheelTimeTwo);
-            sendVelocity((frontWheelVelocity + rearWheelVelocity) / 2, 1); // send average of front and rear wheel speed
+            sendVelocity((frontWheelVelocity + rearWheelVelocity) / 2, 1, firstSensor); // send average of front and rear wheel speed
             Serial.println();
             resetR(); // stop measurement
         }
@@ -147,16 +140,14 @@ void velocityMeasure(int sensor)
     }
 }
 
-void sendVelocity(double velocity, int segment)
+void sendVelocity(double velocity, int segment, int direction)
 {
     Serial.println(velocity);
-    for (int i = 0; i < 8; i++)
-    {
-        if (dataToSend[i] == 0.0)
-        {
-            dataToSend[i] = velocity;
-            break;
-        }
+    if(direction == 0){
+        dataToSend = "{ \"velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
+    }
+    else if(direction == 1){
+        dataToSend = "{ \"velocity\": -" + String(velocity) + ", \"segment\": " + String(segment) + "}";
     }
 }
 
