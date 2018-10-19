@@ -65,6 +65,7 @@ void MQTTSend(){ // function for multithreading
     for(int i = 0; i < 8; i++){
         if(dataToSend[i] != 0.0){
             client.publish("/test", String(dataToSend[i]));
+            dataToSend[i] = 0.0;
         }
     }
 }
