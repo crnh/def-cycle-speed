@@ -18,11 +18,11 @@ double dx = 0.025; // distance between both sensors
 void setup()
 {
   Serial.begin(9600);
-  pinMode(2, INPUT_PULLUP);
-  pinMode(3, INPUT_PULLUP);
+  pinMode(2, INPUT_PULLup);
+  pinMode(3, INPUT_PULLup);
 
-  attachInterrupt(digitalPinToInterrupt(2), velocityMeasure0seg0, RISING);
-  attachInterrupt(digitalPinToInterrupt(3), velocityMeasure1seg0, RISING);
+  attachInterrupt(D1, velocityMeasure0seg0, FALLING);
+  attachInterrupt(D1, velocityMeasure1seg0, FALLING);
 }
 
 void loop()
@@ -45,7 +45,7 @@ void loop()
           2) a sensor does detect the front wheel nor the rear wheel;
         */
       }
-      reset(i);
+      resetR(i);
       Serial.println("expire \n");
     }
   }
@@ -116,7 +116,7 @@ void velocityMeasure(int sensor, int i)  // where i is the segment, an int betwe
         sendVelocity((frontWheelVelocity[i] + rearWheelVelocity) / 2, i, true); // send average of front and rear wheel speed
       }
       Serial.println();
-      reset(i); // stop measurement
+      resetR(i); // stop measurement
     }
 
     else
@@ -137,7 +137,7 @@ void sendVelocity(double velocity, int segment, boolean isMean)
   Serial.println(velocity);
 }
 
-void reset(int i)
+void resetR(int i)
 {
   hasFrontWheelPassedOne[i] = false;
   hasFrontWheelPassedBoth[i] = false;
