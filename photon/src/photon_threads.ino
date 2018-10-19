@@ -2,6 +2,8 @@
 
 MQTT client("145.94.196.251", 1883, callback);
 
+Thread thread("mqttThread", MQTTSend);
+
 // recieve message
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -44,7 +46,7 @@ void setup()
 
 void loop()
 {
-    
+
     if (millis() - frontWheelTime > 3500 && hasFrontWheelPassedOne)
     { // een meting die langer duurt dan 3 seconden wordt afgebroken.
         resetR();
@@ -53,19 +55,25 @@ void loop()
     delay(100);
 }
 
-void MQTTSend(){ // function for multithreading
-    if (client.isConnected())
+void MQTTSend()
+{ // function for multithreading
+    while (true)
     {
-        client.loop();
-    }
-    else
-    {
-        client.connect("photon");
-    }
-    for(int i = 0; i < 8; i++){
-        if(dataToSend[i] != 0.0){
-            client.publish("/test", String(dataToSend[i]));
-            dataToSend[i] = 0.0;
+        if (client.isConnected())
+        {
+            client.loop();
+        }
+        else
+        {
+            client.connect("photon");
+        }
+        for (int i = 0; i < 8; i++)
+        {
+            if (dataToSend[i] != 0.0)
+            {
+                client.publish("/test", String(dataToSend[i]));
+                dataToSend[i] = 0.0;
+            }
         }
     }
 }
@@ -142,9 +150,12 @@ void velocityMeasure(int sensor)
 void sendVelocity(double velocity, int segment)
 {
     Serial.println(velocity);
-    for(int i = 0; i < 8; i++){
-        if(dataToSend[i] == 0.0){
+    for (int i = 0; i < 8; i++)
+    {
+        if (dataToSend[i] == 0.0)
+        {
             dataToSend[i] = velocity;
+            break;
         }
     }
 }
