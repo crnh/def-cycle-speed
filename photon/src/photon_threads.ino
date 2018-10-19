@@ -64,7 +64,7 @@ void MQTTSend(){ // function for multithreading
     }
     for(int i = 0; i < 8; i++){
         if(dataToSend[i] != 0.0){
-            client.publish("/test", String(velocity));
+            client.publish("/test", String(dataToSend[i]));
         }
     }
 }
@@ -141,7 +141,7 @@ void velocityMeasure(int sensor)
 void sendVelocity(double velocity, int segment)
 {
     Serial.println(velocity);
-    for(int i = 0; i < 8, i++){
+    for(int i = 0; i < 8; i++){
         if(dataToSend[i] == 0.0){
             dataToSend[i] = velocity;
         }
