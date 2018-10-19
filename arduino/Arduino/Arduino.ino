@@ -21,8 +21,8 @@ void setup()
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(2), velocityMeasure0, RISING);
-  attachInterrupt(digitalPinToInterrupt(3), velocityMeasure1, RISING);
+  attachInterrupt(digitalPinToInterrupt(2), velocityMeasure0seg0, RISING);
+  attachInterrupt(digitalPinToInterrupt(3), velocityMeasure1seg0, RISING);
 }
 
 void loop()
@@ -52,25 +52,31 @@ void loop()
   delay(100);
 }
 
-void velocityMeasure0()
+void velocityMeasure0seg0()
 {
-  
-  if (millis() - lastInterruptTime0[0] > 50)
-  {
-    velocityMeasure(0, 0);
-    lastInterruptTime0[0] = millis();
-  }
+  debounceAndMeasure(0, 0);
   
 }
 
-void velocityMeasure1()
+void velocityMeasure1seg0()
 {
-  if (millis() - lastInterruptTime1[1] > 50)
-  {
-    velocityMeasure(1, 0);
-    lastInterruptTime0[1] = millis();
+  debounceAndMeasure(1, 0); 
+}
+
+void debounceAndMeasure(int sensor, int i){
+  boolean con = false;
+  if(sensor == 0){
+    if( millis() - lastInterruptTime0[i] > 50){
+      velocityMeasure(sensor, i);
+      lastInterruptTime0[i] = millis();
+    }
   }
-  
+  else if (sensor == 1){
+    if(millis() - lastInterruptTime1[i] > 50){
+      velocityMeasure(sensor, i);
+      lastInterruptTime1[i] = millis();
+    }
+  }
 }
 
 void velocityMeasure(int sensor, int i)  // where i is the segment, an int between 0 and 3 
