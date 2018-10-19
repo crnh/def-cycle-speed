@@ -44,6 +44,16 @@ void setup()
 
 void loop()
 {
+    
+    if (millis() - frontWheelTime > 3500 && hasFrontWheelPassedOne)
+    { // een meting die langer duurt dan 3 seconden wordt afgebroken.
+        resetR();
+        Serial.println("expire \n");
+    }
+    delay(100);
+}
+
+void MQTTSend(){ // function for multithreading
     if (client.isConnected())
     {
         client.loop();
@@ -52,12 +62,11 @@ void loop()
     {
         client.connect("photon");
     }
-    if (millis() - frontWheelTime > 3500 && hasFrontWheelPassedOne)
-    { // een meting die langer duurt dan 3 seconden wordt afgebroken.
-        resetR();
-        Serial.println("expire \n");
+    for(int i = 0; i < 8; i++){
+        if(dataToSend[i] != 0.0){
+            client.publish("/test", String(velocity));
+        }
     }
-    delay(100);
 }
 
 void interrupt()
@@ -132,9 +141,11 @@ void velocityMeasure(int sensor)
 void sendVelocity(double velocity, int segment)
 {
     Serial.println(velocity);
-
-    client.connect("photon");
-    client.publish("/test", String(velocity));
+    for(int i = 0; i < 8, i++){
+        if(dataToSend[i] == 0.0){
+            dataToSend[i] = velocity;
+        }
+    }
 }
 
 void resetR()
