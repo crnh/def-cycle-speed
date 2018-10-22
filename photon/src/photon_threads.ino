@@ -3,6 +3,7 @@
 // CONSTANTS (CONFIGURATION)
 double dx = 0.5;                   // distance between sensors in meter
 int minTimeBetweenInterrupts = 60; // minimum time between two interrupts
+int expireTime;                    // time after which an unfinished measurement expires
 
 MQTT client("145.94.196.251", 1883, callback);
 
@@ -99,6 +100,9 @@ void Segment::reset()
 #pragma region
 
 Segment segment1 = Segment(1);
+Segment segment2 = Segment(2);
+Segment segment3 = Segment(3);
+Segment segment4 = Segment(4);
 
 void getTriggerTimeSegment1A()
 {
@@ -110,7 +114,39 @@ void getTriggerTimeSegment1B()
     segment1.getTriggerTimeB();
 }
 
+void getTriggerTimeSegment2A()
+{
+    segment2.getTriggerTimeA();
+}
+
+void getTriggerTimeSegment2B()
+{
+    segment2.getTriggerTimeB();
+}
+
+void getTriggerTimeSegment3A()
+{
+    segment3.getTriggerTimeA();
+}
+
+void getTriggerTimeSegment3B()
+{
+    segment3.getTriggerTimeB();
+}
+
+void getTriggerTimeSegment4A()
+{
+    segment4.getTriggerTimeA();
+}
+
+void getTriggerTimeSegment4B()
+{
+    segment4.getTriggerTimeB();
+}
+
 #pragma endregion Declare Segment Class Instances
+
+Segment segmentArray[4] = {segment1, segment2, segment3, segment4};
 
 void setup()
 {
@@ -128,6 +164,16 @@ void setup()
     //Segment 4
 }
 
-void loop() {
-
+void loop()
+{
+    for (Segment segment : segmentArray)
+    {
+        for (long triggerTime : segment.triggerTimes)
+        {
+            if (millis() - triggerTime > expireTime)
+            {
+                segment.reset();
+            }
+        }
+    }
 }
