@@ -50,7 +50,7 @@ void Segment::getTriggerTimeA()
         {
             triggerTimes[0] = triggerTime;
             if (triggerTimes[2] == 0) {
-                timestamp = now();
+                timestamp = Time.now();
             }
         }
         else if (triggerTimes[1] == 0)
@@ -71,7 +71,7 @@ void Segment::getTriggerTimeB()
         {
             triggerTimes[2] = triggerTime;
             if (triggerTimes[0] == 0) {
-                timestamp = now();
+                timestamp = Time.now();
             }
         }
         else if (triggerTimes[3] == 0)
