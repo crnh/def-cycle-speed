@@ -4,9 +4,9 @@ MQTT client("145.94.168.78", 1883, callback);
 
 Thread thread("mqttThread", MQTTSend);
 
-const char topic[] = "/bike";
+const char datatopic[] = "/bike";
 
-// recieve message
+// receive message
 void callback(char *topic, byte *payload, unsigned int length)
 {
 }
@@ -43,14 +43,15 @@ void setup()
 
 void loop()
 {
-    for(int j = 0; j < 4; j++){
+    for (int j = 0; j < 4; j++)
+    {
         if (millis() - frontWheelTime[j] > 3000 && hasFrontWheelPassedOne[j])
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetR(j);
             Serial.println("expire \n");
         }
     }
-    
+
     delay(100);
 }
 
@@ -66,7 +67,10 @@ void MQTTSend()
         {
             client.connect("photon");
         }
-        client.publish(topic, dataToSend);
+        if(!dataToSend.equals("")){
+            client.publish(datatopic, dataToSend);
+            dataToSend = "";
+        }
     }
 }
 
@@ -143,10 +147,12 @@ void velocityMeasure(int sensor, int i)
 void sendVelocity(double velocity, int segment, int direction)
 {
     Serial.println(velocity);
-    if(direction == 0){
+    if (direction == 0)
+    {
         dataToSend = "{ \"velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
     }
-    else if(direction == 1){
+    else if (direction == 1)
+    {
         dataToSend = "{ \"velocity\": -" + String(velocity) + ", \"segment\": " + String(segment) + "}";
     }
 }
