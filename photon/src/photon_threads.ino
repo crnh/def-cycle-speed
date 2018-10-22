@@ -1,24 +1,6 @@
-void setup()
-{
-  Serial.begin(9600);
-    pinMode(D1, INPUT_PULLUP);
-    pinMode(D2, INPUT_PULLUP);
-
-    attachInterrupt(D1, interrupt, RISING);
-    //attachInterrupt(D2, interrupt, RISING);
-}
-
-void loop(){
- Serial.println("NOt Triggered");
- delay(120);
-}
-
-void interrupt()
-{
-  Serial.println("Triggered");
-}
-/*
 #include "MQTT.h"
+
+SYSTEM_THREAD(ENABLED);
 
 MQTT client("145.94.196.251", 1883, callback);
 
@@ -48,7 +30,7 @@ double frontWheelVelocity = 0.0;
 
 int i = 0;
 
-double dx = 0.025; // distance between both sensors
+double dx = 1.0; // distance between both sensors
 
 void setup()
 {
@@ -56,8 +38,8 @@ void setup()
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
 
-    //attachInterrupt(D1, interrupt, RISING);
-    //attachInterrupt(D2, interrupt, RISING);
+    attachInterrupt(D1, velocityMeasure0, RISING);
+    attachInterrupt(D2, velocityMeasure1, RISING);
 
     client.connect("photon");
     client.subscribe("/test");
@@ -66,7 +48,7 @@ void setup()
 
 void loop()
 {
-
+    //Serial.println(hasFrontWheelPassedOne);
     if (millis() - frontWheelTime > 3500 && hasFrontWheelPassedOne)
     { // een meting die langer duurt dan 3 seconden wordt afgebroken.
         resetR();
@@ -93,7 +75,6 @@ void MQTTSend()
 
 void interrupt()
 {
-    Serial.println("Triggered");
     if (millis() - lastInterruptTime0 > 50)
     {
         
@@ -122,6 +103,8 @@ void velocityMeasure1()
 
 void velocityMeasure(int sensor)
 {
+    //Serial.println("Triggered");
+
     if (!hasFrontWheelPassedOne)
     { // first detection of bike, measurement starts
         frontWheelTime = millis();
@@ -164,6 +147,7 @@ void velocityMeasure(int sensor)
 void sendVelocity(double velocity, int segment, int direction)
 {
     Serial.println(velocity);
+    Serial.println("je moeder");
     if(direction == 0){
         dataToSend = "{ \"velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
     }
@@ -186,4 +170,3 @@ void resetR()
 
     frontWheelVelocity = 0.0;
 }
-*/
