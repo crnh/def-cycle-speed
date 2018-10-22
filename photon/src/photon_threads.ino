@@ -1,9 +1,11 @@
 #include "MQTT.h"
 
+SYSTEM_THREAD(ENABLED);
+
 // CONSTANTS (CONFIGURATION)
 double dx = 0.5;                   // distance between sensors in meter
 int minTimeBetweenInterrupts = 60; // minimum time between two interrupts
-int expireTime;                    // time after which an unfinished measurement expires
+int expireTime = 2000;             // time after which an unfinished measurement expires
 
 MQTT client("145.94.196.251", 1883, callback);
 
@@ -49,16 +51,23 @@ class Segment
 Segment::Segment(int segmentId)
 {
     id = segmentId;
+    for (int i = 0; i < 4; i++)
+    {
+        triggerTimes[i] = 0;
+    }
 }
 
 // Push trigger times of pinA in milliseconds to triggerTimes
 void Segment::getTriggerTimeA()
 {
+    Serial.println("TRIGGERED");
     long triggerTime = millis();
     if (triggerTime - lastTriggerTimeA > minTimeBetweenInterrupts)
     {
+        Serial.println("TRIGGERED OK");
         if (triggerTimes[0] == 0)
         {
+            Serial.println("TRIGGERED OK: first");
             triggerTimes[0] = triggerTime;
             if (triggerTimes[2] == 0)
             {
@@ -67,6 +76,7 @@ void Segment::getTriggerTimeA()
         }
         else if (triggerTimes[1] == 0)
         {
+            Serial.println("TRIGGERED OK: second");
             triggerTimes[1] = triggerTime;
         }
     }
@@ -77,11 +87,14 @@ void Segment::getTriggerTimeA()
 // Push trigger times of pinB in milliseconds to triggerTimes
 void Segment::getTriggerTimeB()
 {
+    Serial.println("TRIGGERED");
     long triggerTime = millis();
     if (triggerTime - lastTriggerTimeB > minTimeBetweenInterrupts)
     {
+        Serial.println("TRIGGERED OK");
         if (triggerTimes[2] == 0)
         {
+            Serial.println("TRIGGERED OK: first");
             triggerTimes[2] = triggerTime;
             if (triggerTimes[0] == 0)
             {
@@ -90,6 +103,7 @@ void Segment::getTriggerTimeB()
         }
         else if (triggerTimes[3] == 0)
         {
+            Serial.println("TRIGGERED OK: second");
             triggerTimes[3] = triggerTime;
         }
     }
@@ -107,6 +121,7 @@ boolean Segment::measurementFinished()
             return false;
         }
     }
+    Serial.println("measurement finished");
     return true;
 }
 
@@ -121,6 +136,7 @@ double Segment::getVelocity()
 // clean all measurement data (timestamp and triggertimes)
 void Segment::reset()
 {
+    Serial.println("RESET");
     timestamp = 0;
 
     for (int i = 0; i < 4; i++)
@@ -181,11 +197,11 @@ void getTriggerTimeSegment4B()
 
 #pragma endregion Declare Segment Class Instances
 
-Segment segmentArray[4] = {segment1, segment2, segment3, segment4};
+Segment segmentArray[] = {segment1};
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     // Segment 1
     pinMode(D1, INPUT_PULLUP);
@@ -203,25 +219,24 @@ void setup()
 
 void loop()
 {
-    for (Segment segment : segmentArray)
+    delay(100);
+
+    if (segment1.measurementFinished())
     {
-        if (segment.measurementFinished())
-        {
-            sendValue(segment.id, segment.getVelocity());
-            segment.reset();
-        }
+        Serial.println("measurement finished");
+        sendValue(segment.id, segment.getVelocity());
+        segment.reset();
     }
 
     // check if there are any expired measurements
-    for (Segment segment : segmentArray)
+
+    for (int i = 0; i < 4; i++)
     {
-        for (long triggerTime : segment.triggerTimes)
+        triggerTime = segment1.triggerTimes[i];
+        if (triggerTime != 0 && millis() - triggerTime > expireTime)
         {
-            if (millis() - triggerTime > expireTime)
-            {
-                Serial.println("EXPIRED");
-                segment.reset();
-            }
+            Serial.println("EXPIRED");
+            segment.reset();
         }
     }
 }
