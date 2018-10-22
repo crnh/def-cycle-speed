@@ -1,3 +1,23 @@
+void setup()
+{
+  Serial.begin(9600);
+    pinMode(D1, INPUT_PULLUP);
+    pinMode(D2, INPUT_PULLUP);
+
+    attachInterrupt(D1, interrupt, RISING);
+    //attachInterrupt(D2, interrupt, RISING);
+}
+
+void loop(){
+ Serial.println("NOt Triggered");
+ delay(120);
+}
+
+void interrupt()
+{
+  Serial.println("Triggered");
+}
+/*
 #include "MQTT.h"
 
 MQTT client("145.94.196.251", 1883, callback);
@@ -36,8 +56,8 @@ void setup()
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
 
-    attachInterrupt(D1, velocityMeasure0, RISING);
-    attachInterrupt(D2, velocityMeasure1, RISING);
+    //attachInterrupt(D1, interrupt, RISING);
+    //attachInterrupt(D2, interrupt, RISING);
 
     client.connect("photon");
     client.subscribe("/test");
@@ -73,9 +93,10 @@ void MQTTSend()
 
 void interrupt()
 {
+    Serial.println("Triggered");
     if (millis() - lastInterruptTime0 > 50)
     {
-        Serial.println("Triggered");
+        
         lastInterruptTime0 = millis();
     }
 }
@@ -165,3 +186,4 @@ void resetR()
 
     frontWheelVelocity = 0.0;
 }
+*/
