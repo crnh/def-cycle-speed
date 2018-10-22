@@ -30,11 +30,24 @@ const double dx = 0.025; // distance between both sensors
 void setup()
 {
     Serial.begin(9600);
+    
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
+    pinMode(D3, INPUT_PULLUP);
+    pinMode(D4, INPUT_PULLUP);
+    pinMode(D5, INPUT_PULLUP);
+    pinMode(D6, INPUT_PULLUP);
+    pinMode(D7, INPUT_PULLUP);
+    pinMode(A2, INPUT_PULLUP);
 
-    attachInterrupt(D1, velocityMeasure0, FALLING);
-    attachInterrupt(D2, velocityMeasure1, FALLING);
+    attachInterrupt(D1, velocityMeasure0A, FALLING);
+    attachInterrupt(D2, velocityMeasure0B, FALLING);
+    attachInterrupt(D3, velocityMeasure1A, FALLING);
+    attachInterrupt(D4, velocityMeasure1B, FALLING);
+    attachInterrupt(D5, velocityMeasure2A, FALLING);
+    attachInterrupt(D6, velocityMeasure2B, FALLING);
+    attachInterrupt(D7, velocityMeasure3A, FALLING);
+    attachInterrupt(A2, velocityMeasure3B, FALLING);
 
     client.connect("photon");
     client.subscribe("/test");
@@ -84,26 +97,55 @@ void MQTTSend()
     }
 }*/
 
-void velocityMeasure0()
+void velocityMeasureSeg0A()
 {
+    debounceAndMeasure(0, 0);
+}
 
-    if (millis() - lastInterruptTime0[0] > 50)
+void velocityMeasure0B()
+{
+    debounceAndMeasure(0, 1);
+}
+
+void velocityMeasureSeg1A()
+{
+    debounceAndMeasure(1, 0);
+}
+
+void velocityMeasure1B()
+{
+    debounceAndMeasure(1, 1);
+}
+
+void velocityMeasureSeg2A()
+{
+    debounceAndMeasure(2,0);
+}
+
+void velocityMeasure2B()
+{
+    debounceAndMeasure(2, 1);
+}
+
+void velocityMeasureSeg3A()
+{
+    debounceAndMeasure(3, 0);
+}
+
+void velocityMeasure3B()
+{
+    debounceAndMeasure(3, 1);
+}
+
+void debounceAndMeasure(int segment, int sensor){
+    if (millis() - lastInterruptTime1[segment] > 50)
     {
-        velocityMeasure(0, 0);
-        lastInterruptTime0[0] = millis();
+        velocityMeasure(segment, sensor);
+        lastInterruptTime0[segment] = millis();
     }
 }
 
-void velocityMeasure1()
-{
-    if (millis() - lastInterruptTime1[0] > 50)
-    {
-        velocityMeasure(1, 0);
-        lastInterruptTime0[0] = millis();
-    }
-}
-
-void velocityMeasure(int sensor, int i)
+void velocityMeasure(int i, int sensor)
 {
     if (!hasFrontWheelPassedOne[i])
     { // first detection of bike, measurement starts
