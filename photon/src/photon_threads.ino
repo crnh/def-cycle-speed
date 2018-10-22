@@ -20,15 +20,25 @@ void callback(char *topic, byte *payload, unsigned int length)
 class Segment
 {
   public:
-    int segmentId;
+    int id;
+
+    // timestamp, indicating the time of the first trigger
     long timestamp;
+
+    /* array containing the trigger times. 
+        0: first trigger of pinA, 
+        1: second trigger of pinA,
+        2: first trigger of pinB,
+        3: second trigger of pinB
+    */
     long triggerTimes[4];
 
     Segment(int id);
 
     void getTriggerTimeA();
     void getTriggerTimeB();
-    double calculateSpeed();
+    boolean measurementFinished();
+    double getVelocity();
     void reset();
 
   private:
@@ -36,11 +46,12 @@ class Segment
     long lastTriggerTimeB;
 };
 
-Segment::Segment(int id)
+Segment::Segment(int segmentId)
 {
-    segmentId = id;
+    id = segmentId;
 }
 
+// Push trigger times of pinA in milliseconds to triggerTimes
 void Segment::getTriggerTimeA()
 {
     long triggerTime = millis();
@@ -49,7 +60,8 @@ void Segment::getTriggerTimeA()
         if (triggerTimes[0] == 0)
         {
             triggerTimes[0] = triggerTime;
-            if (triggerTimes[2] == 0) {
+            if (triggerTimes[2] == 0)
+            {
                 timestamp = Time.now();
             }
         }
@@ -62,6 +74,7 @@ void Segment::getTriggerTimeA()
     lastTriggerTimeA = triggerTime;
 }
 
+// Push trigger times of pinB in milliseconds to triggerTimes
 void Segment::getTriggerTimeB()
 {
     long triggerTime = millis();
@@ -70,7 +83,8 @@ void Segment::getTriggerTimeB()
         if (triggerTimes[2] == 0)
         {
             triggerTimes[2] = triggerTime;
-            if (triggerTimes[0] == 0) {
+            if (triggerTimes[0] == 0)
+            {
                 timestamp = Time.now();
             }
         }
@@ -83,13 +97,28 @@ void Segment::getTriggerTimeB()
     lastTriggerTimeB = triggerTime;
 }
 
-double Segment::calculateSpeed()
+// returns a bool indicating whether the measurement has been finished or not
+boolean Segment::measurementFinished()
+{
+    for (long i : triggerTimes)
+    {
+        if (i == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// calculate bike speed from values in triggerTimes
+double Segment::getVelocity()
 {
     double speed1 = dx / (triggerTimes[2] - triggerTimes[0]);
     double speed2 = dx / (triggerTimes[3] - triggerTimes[1]);
     return (speed1 + speed2) / 2;
 }
 
+// clean all measurement data (timestamp and triggertimes)
 void Segment::reset()
 {
     timestamp = 0;
@@ -156,6 +185,8 @@ Segment segmentArray[4] = {segment1, segment2, segment3, segment4};
 
 void setup()
 {
+    Serial.begin(9600);
+
     // Segment 1
     pinMode(D1, INPUT_PULLUP);
     attachInterrupt(D1, getTriggerTimeSegment1A, RISING);
@@ -174,12 +205,29 @@ void loop()
 {
     for (Segment segment : segmentArray)
     {
+        if (segment.measurementFinished())
+        {
+            sendValue(segment.id, segment.getVelocity());
+            segment.reset();
+        }
+    }
+
+    // check if there are any expired measurements
+    for (Segment segment : segmentArray)
+    {
         for (long triggerTime : segment.triggerTimes)
         {
             if (millis() - triggerTime > expireTime)
             {
+                Serial.println("EXPIRED");
                 segment.reset();
             }
         }
     }
+}
+
+void sendValue(int id, double velocity)
+{
+    Serial.println("ID: " + String(id));
+    Serial.println("velocity: " + String(velocity));
 }
