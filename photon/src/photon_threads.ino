@@ -49,6 +49,9 @@ void Segment::getTriggerTimeA()
         if (triggerTimes[0] == 0)
         {
             triggerTimes[0] = triggerTime;
+            if (triggerTimes[2] == 0) {
+                timestamp = now();
+            }
         }
         else if (triggerTimes[1] == 0)
         {
@@ -67,6 +70,9 @@ void Segment::getTriggerTimeB()
         if (triggerTimes[2] == 0)
         {
             triggerTimes[2] = triggerTime;
+            if (triggerTimes[0] == 0) {
+                timestamp = now();
+            }
         }
         else if (triggerTimes[3] == 0)
         {
