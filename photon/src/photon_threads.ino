@@ -54,7 +54,7 @@ void setup()
 
     client.connect(name);
     client.subscribe(datatopic);
-    client.publish(datatopic "hoi");
+    client.publish(datatopic, "hoi");
 }
 
 void loop()
@@ -100,7 +100,7 @@ void MQTTSend()
     }
 }*/
 
-void velocityMeasureSeg0A()
+void velocityMeasure0A()
 {
     debounceAndMeasure(0, 0);
 }
@@ -110,7 +110,7 @@ void velocityMeasure0B()
     debounceAndMeasure(0, 1);
 }
 
-void velocityMeasureSeg1A()
+void velocityMeasure1A()
 {
     debounceAndMeasure(1, 0);
 }
@@ -120,7 +120,7 @@ void velocityMeasure1B()
     debounceAndMeasure(1, 1);
 }
 
-void velocityMeasureSeg2A()
+void velocityMeasure2A()
 {
     debounceAndMeasure(2,0);
 }
@@ -130,7 +130,7 @@ void velocityMeasure2B()
     debounceAndMeasure(2, 1);
 }
 
-void velocityMeasureSeg3A()
+void velocityMeasure3A()
 {
     debounceAndMeasure(3, 0);
 }
