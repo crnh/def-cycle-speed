@@ -1,10 +1,14 @@
 #include "MQTT.h"
 
+const char datatopic[] = "/bike";
+const char name[] = "photon";
+
+const int timeout = 1000; // maximum measurement time 
+const double dx = 0.025; // distance between both sensors
+
 MQTT client("145.94.168.78", 1883, callback);
 
 Thread thread("mqttThread", MQTTSend);
-
-const char datatopic[] = "/bike";
 
 // receive message
 void callback(char *topic, byte *payload, unsigned int length)
@@ -24,8 +28,6 @@ unsigned long lastInterruptTime1[] = {0, 0, 0, 0};
 double frontWheelVelocity[] = {0.0, 0.0, 0.0, 0.0};
 
 String dataToSend = "";
-
-const double dx = 0.025; // distance between both sensors
 
 void setup()
 {
@@ -49,16 +51,16 @@ void setup()
     attachInterrupt(D7, velocityMeasure3A, FALLING);
     attachInterrupt(A2, velocityMeasure3B, FALLING);
 
-    client.connect("photon");
-    client.subscribe("/test");
-    client.publish("/test", "hoi");
+    client.connect(name);
+    client.subscribe(datatopic);
+    client.publish(datatopic "hoi");
 }
 
 void loop()
 {
     for (int j = 0; j < 4; j++)
     {
-        if (millis() - frontWheelTime[j] > 3000 && hasFrontWheelPassedOne[j])
+        if (millis() - frontWheelTime[j] > timeout && hasFrontWheelPassedOne[j])
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetR(j);
             Serial.println("expire \n");
