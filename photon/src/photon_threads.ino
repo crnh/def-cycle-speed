@@ -1,12 +1,13 @@
 #include "MQTT.h"
 #include "mqtt_config.h"
 
-const char datatopic[] = "/bike";
+const char datatopic[] = "bike/data";
+const char statustopic[] = "bike/status";
 const char name[] = "photon";
 
 const int timeout = 1000; // maximum measurement time 
 const double dx = 0.025; // distance between both sensors
-MQTT client(MQTT_HOST, 1883, callback);
+MQTT client(MQTT_HOST, MQTT_PORT, callback);
 
 Thread thread("mqttThread", MQTTSend);
 
@@ -80,7 +81,7 @@ void MQTTSend()
         }
         else
         {
-            client.connect("photon");
+            client.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASS);
         }
         if(!dataToSend.equals("")){
             client.publish(datatopic, dataToSend);
