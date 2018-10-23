@@ -20,6 +20,7 @@ boolean hasFrontWheelPassedOne[] = {false, false, false, false};
 boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
 boolean hasRearWheelPassedOne[] = {false, false, false, false};
 int firstSensor[] = {0, 0, 0, 0};
+long timestamp[] = {0, 0, 0, 0};
 
 unsigned long frontWheelTime[] = {0, 0, 0, 0};
 unsigned long rearWheelTime[] = {0, 0, 0, 0};
@@ -63,7 +64,7 @@ void loop()
     {
         if (millis() - frontWheelTime[j] > timeout && hasFrontWheelPassedOne[j])
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
-            resetR(j);
+            resetSegment(j);
             Serial.println("expire \n");
         }
     }
@@ -150,6 +151,11 @@ void debounceAndMeasure(int segment, int sensor){
 
 void velocityMeasure(int i, int sensor)
 {
+    if(timestamp[i] == 0)
+    { // set measurement timestamp
+        timestamp[i] = Time.now();
+    }
+
     if (!hasFrontWheelPassedOne[i])
     { // first detection of bike, measurement starts
         frontWheelTime[i] = millis();
@@ -171,9 +177,9 @@ void velocityMeasure(int i, int sensor)
             double rearWheelVelocity = 1000 * dx / dt;
             Serial.println(rearWheelTime[i]);
             Serial.println(rearWheelTimeTwo);
-            sendVelocity((frontWheelVelocity[i] + rearWheelVelocity) / 2, i, firstSensor[i]); // send average of front and rear wheel speed
+            sendVelocity(timestamp[i], (frontWheelVelocity[i] + rearWheelVelocity) / 2, i, firstSensor[i]); // send average of front and rear wheel speed
             Serial.println();
-            resetR(i); // stop measurement
+            resetSegment(i); // stop measurement
         }
 
         else
@@ -189,12 +195,12 @@ void velocityMeasure(int i, int sensor)
     }
 }
 
-void sendVelocity(double velocity, int segment, int direction)
+void sendVelocity(long timestamp, double velocity, int segment, int direction)
 {
     Serial.println(velocity);
     if (direction == 0)
     {
-        dataToSend = "{ \"velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
+        dataToSend = "{ \"timestamp\": " + String(timestamp) + "\", velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
     }
     else if (direction == 1)
     {
@@ -202,8 +208,10 @@ void sendVelocity(double velocity, int segment, int direction)
     }
 }
 
-void resetR(int i)
+void resetSegment(int i)
 {
+    timestamp[i] = 0;
+
     hasFrontWheelPassedOne[i] = false;
     hasFrontWheelPassedBoth[i] = false;
     hasRearWheelPassedOne[i] = false;
