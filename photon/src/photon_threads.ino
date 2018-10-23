@@ -1,6 +1,7 @@
 #include "MQTT.h"
+#include "mqtt_config.h"
 
-MQTT client("145.94.168.78", 1883, callback);
+MQTT client(MQTT_HOST, 1883, callback);
 
 Thread thread("mqttThread", MQTTSend);
 
