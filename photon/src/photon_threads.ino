@@ -5,7 +5,7 @@ const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
 const int timeout = 3000; // maximum measurement time in microseconds
-const double dx = 0.025; // distance between both sensors in meters
+const double dx = 1.0; // distance between both sensors in meters
 const unsigned long sleepTimeout = 60; // time to stay awake after measurement in seconds.
 
 MQTT client(MQTT_HOST, MQTT_PORT, callback);
@@ -146,8 +146,9 @@ void velocityMeasure3B()
 }
 
 void debounceAndMeasure(int segment, int sensor){
+    Serial.println("Triggered");
     int index = 2*segment + sensor;
-    if (millis() - lastInterruptTime[index] > 50)
+    if (millis() - lastInterruptTime[index] > 100)
     {
         velocityMeasure(segment, sensor);
         lastInterruptTime[index] = millis();
@@ -162,7 +163,7 @@ void velocityMeasure(int i, int sensor)
         frontWheelTime[i] = millis();
         firstSensor[i] = sensor;
     }
-    else if (rearWheelTime[i] == 0)
+    else if (sensor == firstSensor[i])
     { // rear wheel detected for the first time
         rearWheelTime[i] = millis();
     }
@@ -177,7 +178,7 @@ void velocityMeasure(int i, int sensor)
             Serial.println(frontWheelTimeTwo);
             dt = frontWheelTimeTwo - frontWheelTime[i];
             frontWheelVelocity[i] = 1000 * dx / dt;
-            Serial.println(frontWheelVelocity[i]);
+            //Serial.println(frontWheelVelocity[i]);
         }
 
         else
