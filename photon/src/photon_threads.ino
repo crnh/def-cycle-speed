@@ -8,8 +8,8 @@ const char name[] = "photon";
 const int timeout = 3000; // maximum measurement time in microseconds
 const double dx = 0.025; // distance between both sensors in meters
 const unsigned long sleepTimeout = 60; // time to stay awake after measurement in seconds.
-MQTT client(MQTT_HOST, MQTT_PORT, callback);
 
+MQTT client(MQTT_HOST, MQTT_PORT, callback);
 
 Thread thread("mqttThread", MQTTSend);
 
@@ -22,13 +22,11 @@ boolean hasFrontWheelPassedOne[] = {false, false, false, false};
 boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
 boolean hasRearWheelPassedOne[] = {false, false, false, false};
 int firstSensor[] = {0, 0, 0, 0};
-long timestamp[] = {0, 0, 0, 0};
 
 unsigned long frontWheelTime[] = {0, 0, 0, 0};
 unsigned long rearWheelTime[] = {0, 0, 0, 0};
-unsigned long lastInterruptTime0[] = {0, 0, 0, 0};
-unsigned long lastInterruptTime1[] = {0, 0, 0, 0};
-unsigned long timeStamp[4];
+unsigned long lastInterruptTime[] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long timestamp[4];
 
 unsigned long lastMeasurementTime;
 
@@ -163,14 +161,9 @@ void debounceAndMeasure(int segment, int sensor){
 
 void velocityMeasure(int i, int sensor)
 {
-    if(timestamp[i] == 0)
-    { // set measurement timestamp
-        timestamp[i] = Time.now();
-    }
-
     if (!hasFrontWheelPassedOne[i])
     { // first detection of bike, measurement starts
-        timeStamp[i] = Time.now();
+        timestamp[i] = Time.now();
         frontWheelTime[i] = millis();
         firstSensor[i] = sensor;
         hasFrontWheelPassedOne[i] = true;
