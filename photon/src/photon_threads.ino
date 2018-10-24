@@ -4,7 +4,7 @@
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
-const int timeout = 3000; // maximum measurement time in microseconds
+const int timeout = 1000; // maximum measurement time in microseconds
 const double dx = 0.025; // distance between both sensors in meters
 const unsigned long sleepTimeout = 60; // time to stay awake after measurement in seconds.
 
@@ -16,6 +16,8 @@ Thread thread("mqttThread", MQTTSend);
 void callback(char *topic, byte *payload, unsigned int length)
 {
 }
+
+
 
 //boolean hasFrontWheelPassedOne[] = {false, false, false, false};
 //boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
@@ -32,6 +34,8 @@ unsigned long lastMeasurementTime;
 double frontWheelVelocity[] = {0.0, 0.0, 0.0, 0.0};
 
 String dataToSend = "";
+
+String dataToSendArray[128];
 
 void setup()
 {
@@ -55,6 +59,10 @@ void setup()
     attachInterrupt(D6, velocityMeasure2B, FALLING);
     attachInterrupt(D7, velocityMeasure3A, FALLING);
     attachInterrupt(A2, velocityMeasure3B, FALLING);
+
+    for(int i = 0; i < dataToSendArray.length; i++){
+        dataToSendArray[i] = "";
+    }
 
     lastMeasurementTime = Time.now();
     SYSTEM_THREAD(ENABLED);
@@ -202,17 +210,34 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
 {
     //Serial.println(velocity);
     int velocitySign = direction*2 - 1; // determine the sign of the velocity
-    dataToSend = "{\"d\":["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]}";
-    /*
-    if (direction == 0)
-    {
-        
+    dataToSend = "["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]";
+
+    for(int i = 0; i < dataToSendArray.length; i++){
+        if(dataToSendArray[i].equals("")){
+            dataToSendArray[i] = dataToSend;
+            break;
+        } 
     }
-    else if (direction == 1)
-    {
+    
+    /*
+    if (direction == 0){}
+    else if (direction == 1){
         dataToSend = "{\"vel\": -" + String(velocity) + ", \"seg\": " + String(segment) + ", \"time\": " + String(timeStamp) + " }";
     }*/
     Serial.println(dataToSend);
+}
+
+void publishToCloud(){
+    while(true){
+        String stringToSend = "";
+        for(int i = 0; i < dataToSendArray.length; i++){
+            if(dataToSendArray[i].equals("")){
+                break;
+            }
+        }
+
+        delay(2000);
+    }
 }
 
 void resetSegment(int i)
