@@ -230,12 +230,19 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
 void publishToCloud(){
     while(true){
         String stringToSend = "";
-        for(int i = 0; i < dataToSendArray.length; i++){
-            if(dataToSendArray[i].equals("")){
+        int amountToSend = 0;
+        for(int i = 0; i < dataToSendArray.length; i++){  // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
+            if(dataToSendArray[i].equals("") || amountToSend >= 9){
                 break;
             }
+            stringToSend += dataToSendArray[i] + ",";
         }
-
+        for(int i = 0; i < dataToSendArray.length - amountToSend; i++){ // dataToSendArray elements are shifed to the left
+            dataToSendArray[i] = dataToSendArray[i + amountToSend];
+        }
+        for(int i = dataToSendArray.length - amountToSend; i < dataToSendArray.length; i++){ // last places will be cleared
+            dataToSendArray[i] = "";
+        }
         delay(2000);
     }
 }
