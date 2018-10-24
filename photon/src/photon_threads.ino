@@ -10,7 +10,8 @@ const unsigned long sleepTimeout = 60; // time to stay awake after measurement i
 
 MQTT client(MQTT_HOST, MQTT_PORT, callback);
 
-Thread thread("mqttThread", MQTTSend);
+//Thread thread("mqttThread", MQTTSend);
+Thread thread("publishThread", publishToCloud);
 
 // receive message
 void callback(char *topic, byte *payload, unsigned int length)
@@ -60,7 +61,7 @@ void setup()
     attachInterrupt(D7, velocityMeasure3A, FALLING);
     attachInterrupt(A2, velocityMeasure3B, FALLING);
 
-    for(int i = 0; i < dataToSendArray.length; i++){
+    for(int i = 0; i < 128; i++){
         dataToSendArray[i] = "";
     }
 
@@ -212,7 +213,7 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
     int velocitySign = direction*2 - 1; // determine the sign of the velocity
     dataToSend = "["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]";
 
-    for(int i = 0; i < dataToSendArray.length; i++){
+    for(int i = 0; i < 128; i++){
         if(dataToSendArray[i].equals("")){
             dataToSendArray[i] = dataToSend;
             break;
@@ -231,18 +232,20 @@ void publishToCloud(){
     while(true){
         String stringToSend = "";
         int amountToSend = 0;
-        for(int i = 0; i < dataToSendArray.length; i++){  // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
+        int length = 128;
+        for(int i = 0; i < length; i++){  // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
             if(dataToSendArray[i].equals("") || amountToSend >= 9){
                 break;
             }
             stringToSend += dataToSendArray[i] + ",";
         }
-        for(int i = 0; i < dataToSendArray.length - amountToSend; i++){ // dataToSendArray elements are shifed to the left
+        for(int i = 0; i < length - amountToSend; i++){ // dataToSendArray elements are shifed to the left
             dataToSendArray[i] = dataToSendArray[i + amountToSend];
         }
-        for(int i = dataToSendArray.length - amountToSend; i < dataToSendArray.length; i++){ // last places will be cleared
+        for(int i = length - amountToSend; i < length; i++){ // last places will be cleared
             dataToSendArray[i] = "";
         }
+        Particle.publish(datatopic, stringToSend);
         delay(2000);
     }
 }
