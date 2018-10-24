@@ -79,7 +79,6 @@ void loop()
 
 void MQTTSend()
 { // function for multithreading
-    MQTT client("mqttdef.ddns.net", 1883, callback);
     client.connect(name);
     client.publish(datatopic, "hoi");
     while (true)
@@ -111,13 +110,11 @@ void MQTTSend()
 
 void velocityMeasure0A()
 {
-    Serial.println("tra");
     debounceAndMeasure(0, 0);
 }
 
 void velocityMeasure0B()
 {
-    Serial.println("trb");
     debounceAndMeasure(0, 1);
 }
 
@@ -152,10 +149,11 @@ void velocityMeasure3B()
 }
 
 void debounceAndMeasure(int segment, int sensor){
-    if (millis() - lastInterruptTime1[segment] > 50)
+    int index = 2*segment + sensor;
+    if (millis() - lastInterruptTime[index] > 50)
     {
         velocityMeasure(segment, sensor);
-        lastInterruptTime0[segment] = millis();
+        lastInterruptTime[index] = millis();
     }
 }
 
@@ -177,7 +175,7 @@ void velocityMeasure(int i, int sensor)
     {
         int dt;
         if (hasFrontWheelPassedBoth[i])
-        { // calculate rear wheel speed
+        { // second detection of rear wheel, calculate rear wheel speed and send average speed
             if(rearWheelTime[i] != 0){
                 unsigned long rearWheelTimeTwo = millis();
                 dt = rearWheelTimeTwo - rearWheelTime[i];
@@ -192,14 +190,14 @@ void velocityMeasure(int i, int sensor)
         }
 
         else
-        { // calculate front wheel speed
+        { // second detection of front wheel, calculate front wheel speed
             hasFrontWheelPassedBoth[i] = true;
             unsigned long frontWheelTimeTwo = millis();
             Serial.println(frontWheelTime[i]);
             Serial.println(frontWheelTimeTwo);
             dt = frontWheelTimeTwo - frontWheelTime[i];
             frontWheelVelocity[i] = 1000 * dx / dt;
-            //Serial.println(frontWheelVelocity);
+            Serial.println(frontWheelVelocity);
         }
     }
 }
@@ -207,15 +205,17 @@ void velocityMeasure(int i, int sensor)
 void sendVelocity(long timestamp, double velocity, int segment, int direction)
 {
     //Serial.println(velocity);
-    
+    int velocitySign = direction*2 - 1; // determine the sign of the velocity
+    dataToSend = "{["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]}";
+    /*
     if (direction == 0)
     {
-        dataToSend = "{ \"timestamp\": " + String(timestamp) + "\", velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
+        
     }
     else if (direction == 1)
     {
         dataToSend = "{\"vel\": -" + String(velocity) + ", \"seg\": " + String(segment) + ", \"time\": " + String(timeStamp) + " }";
-    }
+    }*/
     Serial.println(dataToSend);
 }
 
