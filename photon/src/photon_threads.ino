@@ -3,10 +3,9 @@
 const char datatopic[] = "/bike";
 const char name[] = "photon";
 
-const int timeout = 1000; // maximum measurement time 
-const double dx = 0.025; // distance between both sensors
-
-MQTT client("145.94.168.78", 1883, callback);
+const int timeout = 3000; // maximum measurement time in microseconds
+const double dx = 0.025; // distance between both sensors in meters
+const unsigned long sleepTimeout = 60; // time to stay awake after measurement in seconds.
 
 Thread thread("mqttThread", MQTTSend);
 
@@ -24,6 +23,9 @@ unsigned long frontWheelTime[] = {0, 0, 0, 0};
 unsigned long rearWheelTime[] = {0, 0, 0, 0};
 unsigned long lastInterruptTime0[] = {0, 0, 0, 0};
 unsigned long lastInterruptTime1[] = {0, 0, 0, 0};
+unsigned long timeStamp[4];
+
+unsigned long lastMeasurementTime;
 
 double frontWheelVelocity[] = {0.0, 0.0, 0.0, 0.0};
 
@@ -31,8 +33,9 @@ String dataToSend = "";
 
 void setup()
 {
-    Serial.begin(9600);
-    
+    Serial.begin(115200);
+    Serial.println("test");
+  
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
     pinMode(D3, INPUT_PULLUP);
@@ -51,27 +54,32 @@ void setup()
     attachInterrupt(D7, velocityMeasure3A, FALLING);
     attachInterrupt(A2, velocityMeasure3B, FALLING);
 
-    client.connect(name);
-    client.subscribe(datatopic);
-    client.publish(datatopic "hoi");
+    lastMeasurementTime = Time.now();
+
+    SYSTEM_THREAD(ENABLED);
 }
 
 void loop()
 {
     for (int j = 0; j < 4; j++)
     {
-        if (millis() - frontWheelTime[j] > timeout && hasFrontWheelPassedOne[j])
+        if (millis() - frontWheelTime[j] > 3000 && hasFrontWheelPassedOne[j])
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetR(j);
             Serial.println("expire \n");
         }
     }
-
-    delay(100);
+    if (Time.now() - lastMeasurementTime > sleepTimeout){
+        //Particle.sleep();
+    }
+    delay(10); 
 }
 
 void MQTTSend()
 { // function for multithreading
+    MQTT client("mqttdef.ddns.net", 1883, callback);
+    client.connect(name);
+    client.publish(datatopic, "hoi");
     while (true)
     {
         if (client.isConnected())
@@ -80,7 +88,7 @@ void MQTTSend()
         }
         else
         {
-            client.connect("photon");
+            client.connect(name);
         }
         if(!dataToSend.equals("")){
             client.publish(datatopic, dataToSend);
@@ -99,17 +107,19 @@ void MQTTSend()
     }
 }*/
 
-void velocityMeasureSeg0A()
+void velocityMeasure0A()
 {
+    Serial.println("tra");
     debounceAndMeasure(0, 0);
 }
 
 void velocityMeasure0B()
 {
+    Serial.println("trb");
     debounceAndMeasure(0, 1);
 }
 
-void velocityMeasureSeg1A()
+void velocityMeasure1A()
 {
     debounceAndMeasure(1, 0);
 }
@@ -119,7 +129,7 @@ void velocityMeasure1B()
     debounceAndMeasure(1, 1);
 }
 
-void velocityMeasureSeg2A()
+void velocityMeasure2A()
 {
     debounceAndMeasure(2,0);
 }
@@ -129,7 +139,7 @@ void velocityMeasure2B()
     debounceAndMeasure(2, 1);
 }
 
-void velocityMeasureSeg3A()
+void velocityMeasure3A()
 {
     debounceAndMeasure(3, 0);
 }
@@ -151,6 +161,7 @@ void velocityMeasure(int i, int sensor)
 {
     if (!hasFrontWheelPassedOne[i])
     { // first detection of bike, measurement starts
+        timeStamp[i] = Time.now();
         frontWheelTime[i] = millis();
         firstSensor[i] = sensor;
         hasFrontWheelPassedOne[i] = true;
@@ -165,13 +176,16 @@ void velocityMeasure(int i, int sensor)
         int dt;
         if (hasFrontWheelPassedBoth[i])
         { // calculate rear wheel speed
-            unsigned long rearWheelTimeTwo = millis();
-            dt = rearWheelTimeTwo - rearWheelTime[i];
-            double rearWheelVelocity = 1000 * dx / dt;
-            Serial.println(rearWheelTime[i]);
-            Serial.println(rearWheelTimeTwo);
-            sendVelocity((frontWheelVelocity[i] + rearWheelVelocity) / 2, i, firstSensor[i]); // send average of front and rear wheel speed
-            Serial.println();
+            if(rearWheelTime[i] != 0){
+                unsigned long rearWheelTimeTwo = millis();
+                dt = rearWheelTimeTwo - rearWheelTime[i];
+                double rearWheelVelocity = 1000 * dx / dt;
+                Serial.println(rearWheelTime[i]);
+                Serial.println(rearWheelTimeTwo);
+                sendVelocity((frontWheelVelocity[i] + rearWheelVelocity) / 2, i, firstSensor[i], timeStamp[i]); // send average of front and rear wheel speed
+                Serial.println();
+            }
+            lastMeasurementTime = Time.now();
             resetR(i); // stop measurement
         }
 
@@ -188,17 +202,19 @@ void velocityMeasure(int i, int sensor)
     }
 }
 
-void sendVelocity(double velocity, int segment, int direction)
+void sendVelocity(double velocity, int segment, int direction, unsigned long timeStamp)
 {
-    Serial.println(velocity);
+    //Serial.println(velocity);
+    
     if (direction == 0)
     {
-        dataToSend = "{ \"velocity\": " + String(velocity) + ", \"segment\": " + String(segment) + "}";
-    }
+        dataToSend = "{\"vel\": " + String(velocity) + ", \"seg\": " + String(segment) + ", \"time\": " + String(timeStamp) + "}";
+    } 
     else if (direction == 1)
     {
-        dataToSend = "{ \"velocity\": -" + String(velocity) + ", \"segment\": " + String(segment) + "}";
+        dataToSend = "{\"vel\": -" + String(velocity) + ", \"seg\": " + String(segment) + ", \"time\": " + String(timeStamp) + " }";
     }
+    Serial.println(dataToSend);
 }
 
 void resetR(int i)
@@ -213,3 +229,8 @@ void resetR(int i)
 
     frontWheelVelocity[i] = 0.0;
 }
+
+/*void startMQTT(char ip[]){
+    ipAdress = ip;
+    
+}*/
