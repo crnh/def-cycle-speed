@@ -150,6 +150,7 @@ void debounceAndMeasure(int segment, int sensor){
     int index = 2*segment + sensor;
     if (millis() - lastInterruptTime[index] > 100)
     {
+        Serial.println("Triggered " + String(segment) + "," + String(sensor));
         velocityMeasure(segment, sensor);
         lastInterruptTime[index] = millis();
     }
