@@ -3,7 +3,6 @@
 
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
-const char name[] = "photon";
 
 const int timeout = 3000; // maximum measurement time in microseconds
 const double dx = 0.025; // distance between both sensors in meters
@@ -18,9 +17,9 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
 }
 
-boolean hasFrontWheelPassedOne[] = {false, false, false, false};
-boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
-boolean hasRearWheelPassedOne[] = {false, false, false, false};
+//boolean hasFrontWheelPassedOne[] = {false, false, false, false};
+//boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
+//boolean hasRearWheelPassedOne[] = {false, false, false, false};
 int firstSensor[] = {0, 0, 0, 0};
 
 unsigned long frontWheelTime[] = {0, 0, 0, 0};
@@ -65,7 +64,7 @@ void loop()
 {
     for (int j = 0; j < 4; j++)
     {
-        if (millis() - frontWheelTime[j] > 3000 && hasFrontWheelPassedOne[j])
+        if (millis() - frontWheelTime[j] > 3000 && frontWheelTime[j] != 0)
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetSegment(j);
             Serial.println("expire \n");
@@ -79,8 +78,6 @@ void loop()
 
 void MQTTSend()
 { // function for multithreading
-    client.connect(name);
-    client.publish(datatopic, "hoi");
     while (true)
     {
         if (client.isConnected())
@@ -159,22 +156,31 @@ void debounceAndMeasure(int segment, int sensor){
 
 void velocityMeasure(int i, int sensor)
 {
-    if (!hasFrontWheelPassedOne[i])
+    if (frontWheelTime[i] == 0)
     { // first detection of bike, measurement starts
         timestamp[i] = Time.now();
         frontWheelTime[i] = millis();
         firstSensor[i] = sensor;
-        hasFrontWheelPassedOne[i] = true;
     }
-    else if (sensor == firstSensor[i])
+    else if (rearWheelTime[i] == 0)
     { // rear wheel detected for the first time
-        hasRearWheelPassedOne[i] = true;
         rearWheelTime[i] = millis();
     }
     else
     {
         int dt;
-        if (hasFrontWheelPassedBoth[i])
+        if (frontWheelVelocity[i] == 0.0)
+        { // second detection of front wheel, calculate front wheel speed
+            //hasFrontWheelPassedBoth[i] = true;
+            unsigned long frontWheelTimeTwo = millis();
+            Serial.println(frontWheelTime[i]);
+            Serial.println(frontWheelTimeTwo);
+            dt = frontWheelTimeTwo - frontWheelTime[i];
+            frontWheelVelocity[i] = 1000 * dx / dt;
+            Serial.println(frontWheelVelocity[i]);
+        }
+
+        else
         { // second detection of rear wheel, calculate rear wheel speed and send average speed
             if(rearWheelTime[i] != 0){
                 unsigned long rearWheelTimeTwo = millis();
@@ -188,17 +194,7 @@ void velocityMeasure(int i, int sensor)
             lastMeasurementTime = Time.now();
             resetSegment(i); // stop measurement
         }
-
-        else
-        { // second detection of front wheel, calculate front wheel speed
-            hasFrontWheelPassedBoth[i] = true;
-            unsigned long frontWheelTimeTwo = millis();
-            Serial.println(frontWheelTime[i]);
-            Serial.println(frontWheelTimeTwo);
-            dt = frontWheelTimeTwo - frontWheelTime[i];
-            frontWheelVelocity[i] = 1000 * dx / dt;
-            Serial.println(frontWheelVelocity);
-        }
+        
     }
 }
 
@@ -206,7 +202,7 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
 {
     //Serial.println(velocity);
     int velocitySign = direction*2 - 1; // determine the sign of the velocity
-    dataToSend = "{["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]}";
+    dataToSend = "{\"d\":["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]}";
     /*
     if (direction == 0)
     {
@@ -223,9 +219,6 @@ void resetSegment(int i)
 {
     timestamp[i] = 0;
 
-    hasFrontWheelPassedOne[i] = false;
-    hasFrontWheelPassedBoth[i] = false;
-    hasRearWheelPassedOne[i] = false;
     firstSensor[i] = 0;
 
     frontWheelTime[i] = 0;
