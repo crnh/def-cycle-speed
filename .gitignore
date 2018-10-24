@@ -1,3 +1,3 @@
-*.bin
 .vscode/
+*.bin
 photon/src/mqtt_config.h
