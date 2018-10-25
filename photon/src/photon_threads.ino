@@ -204,7 +204,7 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
 {
     //Serial.println(velocity);
     int velocitySign = direction*2 - 1; // determine the sign of the velocity
-    dataToSend = "{\"d\":["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]}";
+    dataToSend = String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment);
     /*
     if (direction == 0)
     {
