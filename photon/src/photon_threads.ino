@@ -1,11 +1,13 @@
 #include "MQTT.h"
 #include "mqtt_config.h"
 
+SYSTEM_THREAD(ENABLED);
+
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
-const int timeout = 3000; // maximum measurement time in microseconds
-const double dx = 1.0; // distance between both sensors in meters
+const int timeout = 3000;              // maximum measurement time in microseconds
+const double dx = 1.0;                 // distance between both sensors in meters
 const unsigned long sleepTimeout = 60; // time to stay awake after measurement in seconds.
 
 MQTT client(MQTT_HOST, MQTT_PORT, callback);
@@ -37,7 +39,7 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("test");
-  
+
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
     pinMode(D3, INPUT_PULLUP);
@@ -57,7 +59,6 @@ void setup()
     attachInterrupt(A2, velocityMeasure3B, FALLING);
 
     lastMeasurementTime = Time.now();
-    SYSTEM_THREAD(ENABLED);
 }
 
 void loop()
@@ -70,10 +71,11 @@ void loop()
             Serial.println("expire \n");
         }
     }
-    if (Time.now() - lastMeasurementTime > sleepTimeout){
+    if (Time.now() - lastMeasurementTime > sleepTimeout)
+    {
         //Particle.sleep();
     }
-    delay(10); 
+    delay(10);
 }
 
 void MQTTSend()
@@ -88,7 +90,8 @@ void MQTTSend()
         {
             client.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASS);
         }
-        if(!dataToSend.equals("")){
+        if (!dataToSend.equals(""))
+        {
             client.publish(datatopic, dataToSend);
             dataToSend = "";
         }
@@ -127,7 +130,7 @@ void velocityMeasure1B()
 
 void velocityMeasure2A()
 {
-    debounceAndMeasure(2,0);
+    debounceAndMeasure(2, 0);
 }
 
 void velocityMeasure2B()
@@ -145,9 +148,10 @@ void velocityMeasure3B()
     debounceAndMeasure(3, 1);
 }
 
-void debounceAndMeasure(int segment, int sensor){
+void debounceAndMeasure(int segment, int sensor)
+{
     Serial.println("Triggered");
-    int index = 2*segment + sensor;
+    int index = 2 * segment + sensor;
     if (millis() - lastInterruptTime[index] > 100)
     {
         Serial.println("Triggered " + String(segment) + "," + String(sensor));
@@ -184,7 +188,8 @@ void velocityMeasure(int i, int sensor)
 
         else
         { // second detection of rear wheel, calculate rear wheel speed and send average speed
-            if(rearWheelTime[i] != 0){
+            if (rearWheelTime[i] != 0)
+            {
                 unsigned long rearWheelTimeTwo = millis();
                 dt = rearWheelTimeTwo - rearWheelTime[i];
                 double rearWheelVelocity = 1000 * dx / dt;
@@ -196,7 +201,6 @@ void velocityMeasure(int i, int sensor)
             lastMeasurementTime = Time.now();
             resetSegment(i); // stop measurement
         }
-        
     }
 }
 
