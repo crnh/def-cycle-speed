@@ -211,7 +211,7 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
 {
     //Serial.println(velocity);
     int velocitySign = direction*2 - 1; // determine the sign of the velocity
-    dataToSend = "["  + String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment) + "]";
+    dataToSend = String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment);
 
     for(int i = 0; i < 128; i++){
         if(dataToSendArray[i].equals("")){
@@ -237,7 +237,7 @@ void publishToCloud(){
             if(dataToSendArray[i].equals("") || amountToSend >= 9){
                 break;
             }
-            stringToSend += dataToSendArray[i] + ",";
+            stringToSend += dataToSendArray[i] + ";";
         }
         for(int i = 0; i < length - amountToSend; i++){ // dataToSendArray elements are shifed to the left
             dataToSendArray[i] = dataToSendArray[i + amountToSend];
