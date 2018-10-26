@@ -1,24 +1,24 @@
 #include "MQTT.h"
 #include "mqtt_config.h"
 
+SYSTEM_THREAD(ENABLED);
+
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
-const int timeout = 1000; // maximum measurement time in microseconds
-const double dx = 0.025; // distance between both sensors in meters
-const unsigned long sleepTimeout = 60; // time to stay awake after measurement in seconds.
+const int timeout = 1000;              // maximum measurement time in microseconds
+const double dx = 0.5;                 // distance between both sensors in meters
+const unsigned long sleepTimeout = 10; // time to stay awake after measurement in seconds.
+
 
 MQTT client(MQTT_HOST, MQTT_PORT, callback);
 
-//Thread thread("mqttThread", MQTTSend);
 Thread thread("publishThread", publishToCloud);
 
 // receive message
 void callback(char *topic, byte *payload, unsigned int length)
 {
 }
-
-
 
 //boolean hasFrontWheelPassedOne[] = {false, false, false, false};
 //boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
@@ -42,7 +42,10 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("test");
-  
+    
+    RGB.control(true);
+    RGB.color(0, 0, 0);
+
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
     pinMode(D3, INPUT_PULLUP);
@@ -51,6 +54,7 @@ void setup()
     pinMode(D6, INPUT_PULLUP);
     pinMode(D7, INPUT_PULLUP);
     pinMode(A2, INPUT_PULLUP);
+    pinMode(RX, INPUT_PULLUP);
 
     attachInterrupt(D1, velocityMeasure0A, FALLING);
     attachInterrupt(D2, velocityMeasure0B, FALLING);
@@ -61,12 +65,12 @@ void setup()
     attachInterrupt(D7, velocityMeasure3A, FALLING);
     attachInterrupt(A2, velocityMeasure3B, FALLING);
 
-    for(int i = 0; i < 128; i++){
+    for (int i = 0; i < 128; i++)
+    {
         dataToSendArray[i] = "";
     }
 
     lastMeasurementTime = Time.now();
-    SYSTEM_THREAD(ENABLED);
 }
 
 void loop()
@@ -79,40 +83,15 @@ void loop()
             Serial.println("expire \n");
         }
     }
-    if (Time.now() - lastMeasurementTime > sleepTimeout){
-        //Particle.sleep();
-    }
-    delay(10); 
-}
-
-void MQTTSend()
-{ // function for multithreading
-    while (true)
+    if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals(""))
     {
-        if (client.isConnected())
-        {
-            client.loop();
-        }
-        else
-        {
-            client.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASS);
-        }
-        if(!dataToSend.equals("")){
-            client.publish(datatopic, dataToSend);
-            dataToSend = "";
-        }
+        //System.sleep({D1, D2, D3, D4, D5, D6, D7, A2}, CHANGE);
+        Serial.println("sleep");
+        WiFi.off();
     }
+    Serial.println(".");
+    delay(10);
 }
-
-/*void interrupt()
-{
-    Serial.println("Triggered");
-    if (millis() - lastInterruptTime0 > 50)
-    {
-        
-        lastInterruptTime0 = millis();
-    }
-}*/
 
 void velocityMeasure0A()
 {
@@ -136,7 +115,7 @@ void velocityMeasure1B()
 
 void velocityMeasure2A()
 {
-    debounceAndMeasure(2,0);
+    debounceAndMeasure(2, 0);
 }
 
 void velocityMeasure2B()
@@ -154,8 +133,9 @@ void velocityMeasure3B()
     debounceAndMeasure(3, 1);
 }
 
-void debounceAndMeasure(int segment, int sensor){
-    int index = 2*segment + sensor;
+void debounceAndMeasure(int segment, int sensor)
+{
+    int index = 2 * segment + sensor;
     if (millis() - lastInterruptTime[index] > 50)
     {
         velocityMeasure(segment, sensor);
@@ -191,7 +171,8 @@ void velocityMeasure(int i, int sensor)
 
         else
         { // second detection of rear wheel, calculate rear wheel speed and send average speed
-            if(rearWheelTime[i] != 0){
+            if (rearWheelTime[i] != 0)
+            {
                 unsigned long rearWheelTimeTwo = millis();
                 dt = rearWheelTimeTwo - rearWheelTime[i];
                 double rearWheelVelocity = 1000 * dx / dt;
@@ -203,23 +184,24 @@ void velocityMeasure(int i, int sensor)
             lastMeasurementTime = Time.now();
             resetSegment(i); // stop measurement
         }
-        
     }
 }
 
-void sendVelocity(long timestamp, double velocity, int segment, int direction)
+void sendVelocity(unsigned long timestamp, double velocity, int segment, int direction)
 {
     //Serial.println(velocity);
-    int velocitySign = direction*2 - 1; // determine the sign of the velocity
+    int velocitySign = direction * 2 - 1; // determine the sign of the velocity
     dataToSend = String(timestamp) + "," + String(velocitySign * velocity) + "," + String(segment);
 
-    for(int i = 0; i < 128; i++){
-        if(dataToSendArray[i].equals("")){
+    for (int i = 0; i < 128; i++)
+    {
+        if (dataToSendArray[i].equals(""))
+        {
             dataToSendArray[i] = dataToSend;
             break;
-        } 
+        }
     }
-    
+
     /*
     if (direction == 0){}
     else if (direction == 1){
@@ -228,28 +210,51 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
     Serial.println(dataToSend);
 }
 
-void publishToCloud(){
+void publishToCloud()
+{
     int length = 128;
     String stringToSend;
     int amountToSend;
-    while(true){
+    while (true)
+    {
         stringToSend = "";
         amountToSend = 0;
-        for(int i = 0; i < length; i++){  // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
-            if(dataToSendArray[i].equals("") || amountToSend >= 9){
+        for (int i = 0; i < length; i++)
+        { // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
+            if (dataToSendArray[i].equals("") || amountToSend >= 9)
+            {
                 break;
             }
-            stringToSend += dataToSendArray[i] + ";";
+            stringToSend += dataToSendArray[i];
+            amountToSend++;
+            if (dataToSendArray[i + 1].equals("") || amountToSend >= 9)
+            {
+                break;
+            }
+            else
+            {
+                stringToSend += ";";
+            }
         }
-        for(int i = 0; i < length - amountToSend; i++){ // dataToSendArray elements are shifed to the left
+        for (int i = 0; i < length - amountToSend; i++)
+        { // dataToSendArray elements are shifed to the left
             dataToSendArray[i] = dataToSendArray[i + amountToSend];
         }
-        for(int i = length - amountToSend; i < length; i++){ // last places will be cleared
+        for (int i = length - amountToSend; i < length; i++)
+        { // last places will be cleared
             dataToSendArray[i] = "";
         }
-        if(amountToSend > 0){
+        if (amountToSend > 0)
+        {   
+            if(!WiFi.ready()){
+                WiFi.on();
+                while(WiFi.ready()){
+                    WiFi.connect();
+                    delay(200);
+                }
+            }
             Particle.publish(datatopic, stringToSend);
-        }  
+        }
         delay(2000);
     }
 }
