@@ -229,10 +229,12 @@ void sendVelocity(long timestamp, double velocity, int segment, int direction)
 }
 
 void publishToCloud(){
+    int length = 128;
+    String stringToSend;
+    int amountToSend;
     while(true){
-        String stringToSend = "";
-        int amountToSend = 0;
-        int length = 128;
+        stringToSend = "";
+        amountToSend = 0;
         for(int i = 0; i < length; i++){  // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
             if(dataToSendArray[i].equals("") || amountToSend >= 9){
                 break;
@@ -245,7 +247,9 @@ void publishToCloud(){
         for(int i = length - amountToSend; i < length; i++){ // last places will be cleared
             dataToSendArray[i] = "";
         }
-        Particle.publish(datatopic, stringToSend);
+        if(amountToSend > 0){
+            Particle.publish(datatopic, stringToSend);
+        }  
         delay(2000);
     }
 }
