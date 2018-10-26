@@ -12,6 +12,7 @@
         integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
         crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" />
     <link rel="stylesheet" href="css/index.css">
 
     <!-- scripts -->
@@ -21,6 +22,7 @@
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js" integrity="sha256-CfcERD4Ov4+lKbWbYqXD6aFM9M51gN4GUEtDhkWABMo="
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
     <script src="js/index.js"></script>
 
 </head>
@@ -40,17 +42,41 @@
     <div class="container">
         <div class="card-deck">
             <div class="card">
-                <div class="card-header">Last bike detected</div>
+                <div class="card-header">Segment 0</div>
                 <div class="card-body text-center">
-                    <h1><span id="last-speed" style="font-size: 100pt">40</span> km/h</h1>
-                    <h3><span id="last-time ">12:61:103</span></h3>
+                    <h1><span class="velocity" id="last-speed-0">--</span> <span class="speed-unit">km/h</span></h1>
+                    <h3><span id="last-time-0">--:--:--</span></h3>
                 </div>
             </div>
 
             <div class="card">
+                <div class="card-header">Segment 1</div>
+                <div class="card-body text-center">
+                    <h1><span class="velocity" id="last-speed-1">--</span> <span class="speed-unit">km/h</span></h1>
+                    <h3><span id="last-time-1">--:--:--</span></h3>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Segment 2</div>
+                <div class="card-body text-center">
+                    <h1><span class="velocity" id="last-speed-2">--</span> <span class="speed-unit">km/h</span></h1>
+                    <h3><span id="last-time-2">--:--:--</span></h3>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Segment 3</div>
+                <div class="card-body text-center">
+                    <h1><span class="velocity" id="last-speed-3">--</span> <span class="speed-unit">km/h</span></h1>
+                    <h3><span id="last-time-3">--:--:--</span></h3>
+                </div>
+            </div>
+
+            <!-- <div class="card">
                 <div class="card-header">Stats</div>
                 <div class="card-body">Content</div>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -66,7 +92,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="preferences">
                         <label for="graph-start">From</label>
                         <div id="graph-start" class="input-group form-inline" style="margin-bottom: 10px">
                             <div class="input-group-prepend">
@@ -80,25 +106,40 @@
                         </div>
 
                         <label for="graph-end">To</label>
-                        <div id="graph-end" class="input-group form-inline">
+                        <div id="graph-end" class="input-group form-inline" style="margin-bottom: 10px">
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
                             </div>
-                            <input type="date" class="form-control">
+                            <input id="graph-end-date" type="date" class="form-control">
                             <div class="input-group-prepend input-group-append">
                                 <span class="input-group-text"><i class="far fa-clock"></i></span>
                             </div>
-                            <input type="time" class="form-control">
+                            <input id="graph-end-time" type="time" class="form-control">
+                        </div>
+
+                        <label for="unit-select">Unit</label>
+                        <div class="input-group form-inline">
+                            <select type="dropdown" class="form-control" id="unit-select">
+                                <option value="kmh">km/h</option>
+                                <option value="ms">m/s</option>
+                                <option value="lytp">ly/tp</option>
+                            </select>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-primary" onclick="updatePreferences()">Save changes</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="/uibuilder/socket.io/socket.io.js"></script>
+    <!-- REQUIRED: Sets up Socket listeners and the msg object -->
+    <script src="./uibuilderfe.min.js"></script>
+    <!-- OPTIONAL: You probably want this. Put your custom code here -->
+    <script src="./index.js"></script>
 </body>
 
 </html>

@@ -9,6 +9,18 @@ body {
     background-size: cover;
 }
 
+label {
+    margin-top: 5px;
+}
+
+.velocity {
+    font-size: 40px;
+}
+
+.speed-unit {
+    font-size: 27px;
+}
+
 .container {
     margin-top: 20px;
 }
