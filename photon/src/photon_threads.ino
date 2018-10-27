@@ -217,45 +217,47 @@ void publishToCloud()
     int amountToSend;
     while (true)
     {
-        stringToSend = "";
-        amountToSend = 0;
-        for (int i = 0; i < length; i++)
-        { // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
-            if (dataToSendArray[i].equals("") || amountToSend >= 9)
-            {
-                break;
-            }
-            stringToSend += dataToSendArray[i];
-            amountToSend++;
-            if (dataToSendArray[i + 1].equals("") || amountToSend >= 9)
-            {
-                break;
-            }
-            else
-            {
-                stringToSend += ";";
-            }
-        }
-        for (int i = 0; i < length - amountToSend; i++)
-        { // dataToSendArray elements are shifed to the left
-            dataToSendArray[i] = dataToSendArray[i + amountToSend];
-        }
-        for (int i = length - amountToSend; i < length; i++)
-        { // last places will be cleared
-            dataToSendArray[i] = "";
-        }
-        if (amountToSend > 0)
-        {   
-            if(!WiFi.ready()){
-                WiFi.on();
-                while(WiFi.ready()){
-                    WiFi.connect();
-                    delay(200);
+        if(WiFi.ready() || !dataToSendArray[4].equals("")){ // De connectie wordt pas hersteld als er 5 fietsen gemeten zijn.
+            stringToSend = "";
+            amountToSend = 0;
+            for (int i = 0; i < length; i++)
+            { // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
+                if (dataToSendArray[i].equals("") || amountToSend >= 9)
+                {
+                    break;
+                }
+                stringToSend += dataToSendArray[i];
+                amountToSend++;
+                if (dataToSendArray[i + 1].equals("") || amountToSend >= 9)
+                {
+                    break;
+                }
+                else
+                {
+                    stringToSend += ";";
                 }
             }
-            Particle.publish(datatopic, stringToSend);
+            for (int i = 0; i < length - amountToSend; i++)
+            { // dataToSendArray elements are shifed to the left
+                dataToSendArray[i] = dataToSendArray[i + amountToSend];
+            }
+            for (int i = length - amountToSend; i < length; i++)
+            { // last places will be cleared
+                dataToSendArray[i] = "";
+            }
+            if (amountToSend > 0)
+            {   
+                if(!WiFi.ready()){
+                    WiFi.on();
+                    while(WiFi.ready()){
+                        WiFi.connect();
+                        delay(200);
+                    }
+                }
+                Particle.publish(datatopic, stringToSend);
+            }
         }
-        delay(2000);
+        delay(1200);
     }
 }
 
