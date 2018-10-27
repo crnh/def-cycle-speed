@@ -1,3 +1,21 @@
+// let ctx = document.getElementById('sparkline1')
+// let sparklineSegment1 = new Chart(ctx, {
+//     type: 'line',
+//     data: {
+//         datasets: [
+//             {
+//                 labels: ['', '', '', ''],
+//                 data: [1, 2, 3, 4],
+
+//             }
+//         ]
+//     },
+//     options: {
+//         responsive: true,
+//     }
+// });
+
+
 // constants
 const unitTexts = { // text to use in the UI for the given unit
     kmh: 'km/h',
@@ -8,16 +26,19 @@ const unitTexts = { // text to use in the UI for the given unit
 const unitScales = { // factor for scaling the provided value to a given unit
     kmh: 3.6,
     ms: 1,
-    lytp: 1.7549119778484140233722871452421e59
+    lytp: 5.69846061636014590333e-60
 }
 
 const lastSpeedId = '#last-speed-';
 const lastTimeId = '#last-time-';
+const dataTableId = '#data-table'
 
 // global variables
-let startDate, endDate, unit, unitScale;
+let unit, unitScale;
 let bikeCounter = 0;
-setUnit('kmh', true);
+let startDate = getCookie('startdate') ? new Date(getCookie('startdate')) : moment().subtract(1, 'days').toDate();
+let endDate = getCookie('enddate') ? new Date(getCookie('enddate')) : moment().toDate();
+setUnit(getCookie('unit') || 'kmh', true);
 
 toastr.options = {
     "closeButton": false,
@@ -51,6 +72,8 @@ $(document).ready(function () {
         switch (msg.topic) {
             case 'bikeDetected':
                 bikeDetected(msg.payload);
+            case 'queryResult':
+                queryToTable(msg.payload);
         }
 
         if (msg.topic == 'mqttValue') {
@@ -71,9 +94,13 @@ function updatePreferences() {
     let unitSetting = document.getElementById('unit-select').value;
 
     console.log(startDateSetting, startTimeSetting);
-    startDate = new Date(startDateSetting + startTimeSetting);
-    startDate = new Date(endDateSetting + endTimeSetting);
+    startDate = new Date(startDateSetting + ' ' + startTimeSetting);
+    endDate = new Date(endDateSetting + ' ' + endTimeSetting);
     setUnit(unitSetting);
+
+    setCookie('startdate', startDate);
+    setCookie('enddate', endDate);
+    setCookie('unit', unit);
 }
 
 function setUnit(u, setFirstTime = false) {
@@ -94,9 +121,25 @@ function setUnit(u, setFirstTime = false) {
 function scaleVelocity(v, u) {
     v = Number(v);
     if (u == 'lytp') {
-        return (v * unitScales[u] / 1e59).toFixed(1) + 'e59';
+        return (v * unitScales[u] / 1e-60).toFixed(1) + 'e-60';
     } else {
         return (v * unitScales[u]).toFixed(1);
+    }
+}
+
+function sendQuery() {
+    if (Number(endDate) < Number(startDate)) {
+        toastr['error']('Query failed: date from is later than date to');
+    } else if (!endDate || !startDate) {
+        toastr['error']('Query failed: please specify a query period in the settings menu');
+    } else {
+        uibuilder.send({
+            'topic': 'queryDatabase',
+            'payload': {
+                'startDate': Number(startDate) / 1000,
+                'endDate': Number(endDate) / 1000
+            }
+        });
     }
 }
 
@@ -113,4 +156,38 @@ function bikeDetected(payload) {
     // Change UI elements
     bikeCounter += payload.length;
     $('#counter').text(bikeCounter);
+}
+
+function queryToTable(payload) {
+    if (payload.length == 0) {
+        toastr["info"]('Your query didn\'t return any data');
+    } else {
+        $(dataTableId).html('');
+        for (let i = 0; i < payload.length; i++) {
+            let dataset = payload[i];
+            let date = new Date(+dataset.timestamp * 1000);
+            let tableString = `<tr><td>${date.getDate()}-${date.getMonth()}-${date.getFullYear()}</td><td>${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</td><td>${dataset.velocity}</td><td>${dataset.segment}</td></tr>`
+
+            $(dataTableId).append(tableString);
+        }
+    }
+}
+
+function setCookie(cname, cvalue) {
+    document.cookie = cname + '=' + cvalue;
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return null;
 }

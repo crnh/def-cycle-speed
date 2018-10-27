@@ -13,6 +13,10 @@ label {
     margin-top: 5px;
 }
 
+.card, .card-deck {
+    margin-bottom: 30px;
+}
+
 .velocity {
     font-size: 40px;
 }
