@@ -45,51 +45,14 @@
 
     <div class="container">
         <div class="card-deck">
-            <div class="card">
+            <div class="card border-primary">
                 <div class="card-header">Segment 0</div>
                 <div class="card-body text-center">
                     <h1><span class="velocity" id="last-speed-0">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-0">--:--:--</span></h3>
                 </div>
                 <div style="width: 100%">
-                    <canvas id="sparkline1" height="50px"></canvas>
-                    <script>
-                        var ctx = document.getElementById("sparkline1");
-                        var myChart = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
-                                datasets: [{
-                                    data: [12, 19, 3, 5, 2, 3],
-                                    backgroundColor: '#007bff',
-                                    borderColor: '#007bff',
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                elements: {
-                                    point: {
-                                        radius: 0
-                                    }
-                                },
-                                scales: {
-                                    xAxes: [{
-                                        display: false
-                                    }],
-                                    yAxes: [{
-                                        display: false
-                                    }]
-                                },
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    enabled: false
-                                }
-                            }
-                        });
-                    </script>
+                    <canvas id="sparkline0" height="50px"></canvas>
                 </div>
             </div>
 
@@ -99,6 +62,9 @@
                     <h1><span class="velocity" id="last-speed-1">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-1">--:--:--</span></h3>
                 </div>
+                <div style="width: 100%">
+                    <canvas id="sparkline1" height="50px"></canvas>
+                </div>
             </div>
 
             <div class="card">
@@ -107,6 +73,9 @@
                     <h1><span class="velocity" id="last-speed-2">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-2">--:--:--</span></h3>
                 </div>
+                <div style="width: 100%">
+                    <canvas id="sparkline2" height="50px"></canvas>
+                </div>
             </div>
 
             <div class="card">
@@ -114,6 +83,9 @@
                 <div class="card-body text-center">
                     <h1><span class="velocity" id="last-speed-3">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-3">--:--:--</span></h3>
+                </div>
+                <div style="width: 100%">
+                    <canvas id="sparkline3" height="50px"></canvas>
                 </div>
             </div>
         </div>

@@ -15,6 +15,7 @@ label {
 
 .card, .card-deck {
     margin-bottom: 30px;
+    border: none;
 }
 
 .velocity {
