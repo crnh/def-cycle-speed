@@ -41,13 +41,17 @@ toastr.options = {
 }
 
 $(document).ready(function () {
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+
     let sparkline0 = new Sparkline('sparkline0');
     let sparkline1 = new Sparkline('sparkline1');
     let sparkline2 = new Sparkline('sparkline2');
     let sparkline3 = new Sparkline('sparkline3');
 
     // Turn on debugging (default is off)
-    //uibuilder.debug(true)
+    uibuilder.debug(true)
 
     // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
     // Note that you can also listen for 'msgsReceived' as they are updated at the same time
@@ -62,6 +66,10 @@ $(document).ready(function () {
                 break;
             case 'queryResult':
                 queryToTable(msg.payload);
+                break;
+            case 'bikeCount':
+                bikeCounter = Number(msg.payload);
+                $('#counter').text(bikeCounter);
                 break;
         }
 
@@ -197,6 +205,11 @@ function updatePreferences() {
 
     console.log(startDateSetting, startTimeSetting);
     startDate = new Date(startDateSetting + ' ' + startTimeSetting);
+    if (startDate == "Invalid Date" || endDate == "Invalid Date") {
+        toastr["error"]("One or more of the dates you entered are invalid. Please set them again.");
+        startDate = null;
+        endDate = null;
+    }
     endDate = new Date(endDateSetting + ' ' + endTimeSetting);
     setUnit(unitSetting);
 

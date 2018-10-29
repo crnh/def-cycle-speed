@@ -20,6 +20,7 @@
     <!-- scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha256-VsEqElsCHSGmnmHXGQzvoWjWwoznFSZc6hs7ARLRacQ="
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js" integrity="sha256-CfcERD4Ov4+lKbWbYqXD6aFM9M51gN4GUEtDhkWABMo="
@@ -31,10 +32,11 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between sticky-top">
-        <div class="navbar-brand"><img class="align-middle" src="img/favicon.png" alt="" height="35px"></div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between sticky-top text-center">
+        <div class="navbar-brand">TU Delft</div>
 
-        <div>Bikes counted during visit: <span id="counter">0</span> </div>
+        <div data-toggle="tooltip" data-placement="bottom" title="Total bikes counted"><i class="fas fa-bicycle text-primary"></i>
+            <span id="counter">--</span></div>
 
         <form class="form-inline my-2 my-lg-0">
             <button class="form-control mr-sm-2 btn btn-outline-primary" type="button" data-toggle="modal" data-target="#settingsModal"><i
@@ -46,7 +48,7 @@
     <div class="container">
         <div class="card-deck">
             <div class="card border-primary">
-                <div class="card-header">Segment 0</div>
+                <div class="card-header text-center">Segment 1</div>
                 <div class="card-body text-center">
                     <h1><span class="velocity" id="last-speed-0">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-0">--:--:--</span></h3>
@@ -57,7 +59,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header">Segment 1</div>
+                <div class="card-header text-center">Segment 2</div>
                 <div class="card-body text-center">
                     <h1><span class="velocity" id="last-speed-1">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-1">--:--:--</span></h3>
@@ -68,7 +70,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header">Segment 2</div>
+                <div class="card-header text-center">Segment 3</div>
                 <div class="card-body text-center">
                     <h1><span class="velocity" id="last-speed-2">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-2">--:--:--</span></h3>
@@ -79,7 +81,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header">Segment 3</div>
+                <div class="card-header text-center">Segment 4</div>
                 <div class="card-body text-center">
                     <h1><span class="velocity" id="last-speed-3">--</span> <span class="speed-unit">km/h</span></h1>
                     <h3><span id="last-time-3">--:--:--</span></h3>
@@ -101,13 +103,13 @@
                 <span class="align-middle">Query database</span>
                 <button class="btn btn-primary float-right" onclick="sendQuery()">Query</button>
             </div>
-            <div class="card-body text-center table-responsive">
+            <div class="text-center table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Time</th>
-                            <th scope="col">Velocity</th>
+                            <th scope="col">Velocity (m/s)</th>
                             <th scope="col">Segment</th>
                         </tr>
                     </thead>
@@ -141,6 +143,18 @@
                 </div>
                 <div class="modal-body">
                     <form id="preferences">
+                        <h5>General Settings</h5>
+                        <label for="unit-select">Unit</label>
+                        <div class="input-group form-inline">
+                            <select type="dropdown" class="form-control" id="unit-select">
+                                <option value="kmh">km/h</option>
+                                <option value="ms">m/s</option>
+                                <option value="lytp">ly/tp</option>
+                            </select>
+                        </div>
+
+                        <br>
+                        <h5>Query Settings</h5>
                         <label for="graph-start">From</label>
                         <div id="graph-start" class="input-group form-inline" style="margin-bottom: 10px">
                             <div class="input-group-prepend">
@@ -163,15 +177,6 @@
                                 <span class="input-group-text"><i class="far fa-clock"></i></span>
                             </div>
                             <input id="graph-end-time" type="time" class="form-control">
-                        </div>
-
-                        <label for="unit-select">Unit</label>
-                        <div class="input-group form-inline">
-                            <select type="dropdown" class="form-control" id="unit-select">
-                                <option value="kmh">km/h</option>
-                                <option value="ms">m/s</option>
-                                <option value="lytp">ly/tp</option>
-                            </select>
                         </div>
                     </form>
                 </div>
