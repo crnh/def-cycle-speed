@@ -21,4 +21,5 @@ To complete this setup, some basic knowledge of Node-RED is required. If you've 
  - Prepare a database. The Node-RED flows store incoming values in this database and use this data for calculations.
  - Copy the contents of the [`dashboard/interface`](https://github.com/crnh/def-cycle-speed/tree/master/dashboard/interface) folder to the `.node-red/uibuilder/dashboard/src` folder. On Linux systems, the `.node-red` folder is usually located in `~/.node-red`. On Windows systems this is `%USERPROFILE%/.node-red`.
  - Import the contents of [`dashboard/node-red/flow.json`](https://github.com/crnh/def-cycle-speed/blob/master/dashboard/node-red/flows.json) as a new flow in Node-RED.
+ - Set the right credentials in the Particle Cloud nodes and set the database address in the SQLite nodes.
  - Deploy the flows and navigate to `http://<your-node-red-address>/dashboard`. The flow will automatically insert dummy data which should be visible in the dashboard.
