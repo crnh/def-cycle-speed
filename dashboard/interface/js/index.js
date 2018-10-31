@@ -1,3 +1,5 @@
+"use strict";
+
 // constants
 const unitTexts = { // text to use in the UI for the given unit
     kmh: 'km/h',
@@ -268,3 +270,50 @@ function getCookie(cname) {
     }
     return null;
 }
+
+function drawFrequentyGraph(){
+    let elem = new Element();
+    chart = new Chart(elem, {
+        type: 'line',
+        data: {
+            labels: ['', '', '', '', ''],
+            datasets: [{
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: '#007bff',
+                borderColor: '#007bff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                point: {
+                    radius: 0
+                }
+            },
+            scales: {
+                xAxes: [{
+                    display: false
+                }],
+                yAxes: [{
+                    display: false,
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            },
+            legend: {
+                display: false
+            },
+            tooltips: {
+                enabled: false
+            },
+            animation: {
+                easing: 'easeOutQuint'
+            }
+        }
+    });
+}
+
+
