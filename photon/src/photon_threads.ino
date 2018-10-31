@@ -83,7 +83,7 @@ void loop()
             Serial.println("expire \n");
         }
     }
-    if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals(""))
+    if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals("") && WiFi.ready())
     {
         //System.sleep({D1, D2, D3, D4, D5, D6, D7, A2}, CHANGE);
         Serial.println("sleep");
@@ -167,6 +167,7 @@ void velocityMeasure(int i, int sensor)
             dt = frontWheelTimeTwo - frontWheelTime[i];
             frontWheelVelocity[i] = 1000 * dx / dt;
             Serial.println(frontWheelVelocity[i]);
+            frontWheelTime[i] = 0;
         }
 
         else
@@ -182,7 +183,12 @@ void velocityMeasure(int i, int sensor)
                 Serial.println();
             }
             lastMeasurementTime = Time.now();
-            resetSegment(i); // stop measurement
+            timestamp[i] = 0;
+            firstSensor[i] = 0;
+            rearWheelTime[i] = 0;
+
+            frontWheelVelocity[i] = 0.0;
+            //resetSegment(i); // stop measurement
         }
     }
 }
