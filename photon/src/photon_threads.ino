@@ -1,24 +1,16 @@
-#include "MQTT.h"
-#include "mqtt_config.h"
-
 SYSTEM_THREAD(ENABLED);
 
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
 const int timeout = 1000;              // maximum measurement time in microseconds
-const double dx = 0.5;                 // distance between both sensors in meters
-const unsigned long sleepTimeout = 10; // time to stay awake after measurement in seconds.
-
-
-MQTT client(MQTT_HOST, MQTT_PORT, callback);
+const double dx = 1.0;                 // distance between both sensors in meters
+const unsigned long sleepTimeout = 100; // time to stay awake after measurement in seconds.
 
 Thread thread("publishThread", publishToCloud);
 
 // receive message
-void callback(char *topic, byte *payload, unsigned int length)
-{
-}
+
 
 //boolean hasFrontWheelPassedOne[] = {false, false, false, false};
 //boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
@@ -43,8 +35,8 @@ void setup()
     Serial.begin(115200);
     Serial.println("test");
     
-    RGB.control(true);
-    RGB.color(0, 0, 0);
+    //RGB.control(true);
+    //RGB.color(0, 0, 0);
 
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
@@ -77,7 +69,7 @@ void loop()
 {
     for (int j = 0; j < 4; j++)
     {
-        if (millis() - frontWheelTime[j] > 3000 && frontWheelTime[j] != 0)
+        if (millis() - frontWheelTime[j] > 1300 && frontWheelTime[j] != 0)
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetSegment(j);
             Serial.println("expire \n");
@@ -85,11 +77,10 @@ void loop()
     }
     if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals("") && WiFi.ready())
     {
-        //System.sleep({D1, D2, D3, D4, D5, D6, D7, A2}, CHANGE);
         Serial.println("sleep");
         WiFi.off();
     }
-    Serial.println(".");
+    //Serial.println(".");
     delay(10);
 }
 
@@ -135,9 +126,11 @@ void velocityMeasure3B()
 
 void debounceAndMeasure(int segment, int sensor)
 {
+    Serial.println("triggered");
     int index = 2 * segment + sensor;
-    if (millis() - lastInterruptTime[index] > 50)
+    if (millis() - lastInterruptTime[index] > 75)
     {
+        Serial.println("triggered " + String(segment) + "," + String(sensor));
         velocityMeasure(segment, sensor);
         lastInterruptTime[index] = millis();
     }
@@ -151,7 +144,7 @@ void velocityMeasure(int i, int sensor)
         frontWheelTime[i] = millis();
         firstSensor[i] = sensor;
     }
-    else if (rearWheelTime[i] == 0)
+    else if (sensor == firstSensor[i])
     { // rear wheel detected for the first time
         rearWheelTime[i] = millis();
     }
@@ -167,7 +160,6 @@ void velocityMeasure(int i, int sensor)
             dt = frontWheelTimeTwo - frontWheelTime[i];
             frontWheelVelocity[i] = 1000 * dx / dt;
             Serial.println(frontWheelVelocity[i]);
-            frontWheelTime[i] = 0;
         }
 
         else
@@ -183,12 +175,7 @@ void velocityMeasure(int i, int sensor)
                 Serial.println();
             }
             lastMeasurementTime = Time.now();
-            timestamp[i] = 0;
-            firstSensor[i] = 0;
-            rearWheelTime[i] = 0;
-
-            frontWheelVelocity[i] = 0.0;
-            //resetSegment(i); // stop measurement
+            resetSegment(i); // stop measurement
         }
     }
 }
@@ -255,9 +242,13 @@ void publishToCloud()
             {   
                 if(!WiFi.ready()){
                     WiFi.on();
-                    while(WiFi.ready()){
-                        WiFi.connect();
-                        delay(200);
+                    while(!WiFi.ready()){
+                        unsigned long connectTime = millis();
+                        while(millis() - connectTime < 120000){
+                            WiFi.connect();
+                            delay(200);
+                        }
+                        delay(600000);
                     }
                 }
                 Particle.publish(datatopic, stringToSend);
@@ -279,7 +270,3 @@ void resetSegment(int i)
     frontWheelVelocity[i] = 0.0;
 }
 
-/*void startMQTT(char ip[]){
-    ipAdress = ip;
-    
-}*/
