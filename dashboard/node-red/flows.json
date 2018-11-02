@@ -1,0 +1,467 @@
+[
+    {
+        "id": "22bab773.c5f708",
+        "type": "tab",
+        "label": "Live Data Dashboard",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "9934f307.fe8ef",
+        "type": "sqlite",
+        "z": "22bab773.c5f708",
+        "mydb": "7fb962ff.73d034",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "query sqlite",
+        "x": 330,
+        "y": 60,
+        "wires": [
+            [
+                "8ce574a1.20cbd8"
+            ]
+        ]
+    },
+    {
+        "id": "f739613c.c228c8",
+        "type": "inject",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "topic": "select * from measurement_data",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 140,
+        "y": 60,
+        "wires": [
+            [
+                "9934f307.fe8ef"
+            ]
+        ]
+    },
+    {
+        "id": "8ce574a1.20cbd8",
+        "type": "debug",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 530,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "eea82ac7.eae608",
+        "type": "function",
+        "z": "22bab773.c5f708",
+        "name": "parse data string",
+        "func": "let data = [];\nlet dataStrings = msg.payload.split(';');\nfor( let i = 0; i < dataStrings.length; i++ ){\n    dataset = dataStrings[i].split(',');\n    data.push({\n        timestamp: dataset[0],\n        velocity: dataset[1],\n        segment: dataset[2]\n    })\n}\n\nmsg.payload = data;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 330,
+        "y": 220,
+        "wires": [
+            [
+                "88508d69.c9ed48",
+                "f45f30ca.e81888"
+            ]
+        ]
+    },
+    {
+        "id": "88508d69.c9ed48",
+        "type": "function",
+        "z": "22bab773.c5f708",
+        "name": "set query string",
+        "func": "let data = msg.payload;\nlet queryValues = \"\";\n\nfor( let i = 0; i < data.length; i++){\n    queryValues += `(${data[i].timestamp}, ${data[i].velocity}, ${data[i].segment})`;\n    if( i + 1 != data.length){\n        queryValues += ', ';\n    }\n}\n\nmsg.topic = `insert into measurement_data values ${queryValues}`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 560,
+        "y": 220,
+        "wires": [
+            [
+                "f3638bd6.bd2d4"
+            ]
+        ]
+    },
+    {
+        "id": "f3638bd6.bd2d4",
+        "type": "sqlite",
+        "z": "22bab773.c5f708",
+        "mydb": "7fb962ff.73d034",
+        "sqlquery": "msg.topic",
+        "sql": "insert into measurement_data values $values",
+        "name": "sqlite insert data",
+        "x": 780,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f45f30ca.e81888",
+        "type": "change",
+        "z": "22bab773.c5f708",
+        "name": "set",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "bikeDetected",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 530,
+        "y": 300,
+        "wires": [
+            [
+                "39d58735.4905c"
+            ]
+        ]
+    },
+    {
+        "id": "39d58735.4905c",
+        "type": "uibuilder",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "topic": "",
+        "url": "dashboard",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "debugFE": true,
+        "copyIndex": true,
+        "x": 770,
+        "y": 300,
+        "wires": [
+            [
+                "ee3805c2.d93ab8",
+                "5e25fdf0.e5142c"
+            ],
+            [
+                "ee3805c2.d93ab8",
+                "35129fc2.9570e"
+            ]
+        ]
+    },
+    {
+        "id": "4e2d14f2.d5ceb4",
+        "type": "ParticleSSE in",
+        "z": "22bab773.c5f708",
+        "pcloud": "ce9b9d85.9fa9d",
+        "evtname": "bike/data",
+        "devid": "DeFietsenmoordenaar",
+        "consolelog": false,
+        "x": 220,
+        "y": 160,
+        "wires": [
+            [
+                "af815fe8.3742e",
+                "eea82ac7.eae608"
+            ]
+        ]
+    },
+    {
+        "id": "af815fe8.3742e",
+        "type": "debug",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 550,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "ee3805c2.d93ab8",
+        "type": "debug",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 930,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e25fdf0.e5142c",
+        "type": "switch",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "queryDatabase",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 970,
+        "y": 240,
+        "wires": [
+            [
+                "3e758bbc.4722cc"
+            ]
+        ]
+    },
+    {
+        "id": "35ebb738.3f6a4",
+        "type": "sqlite",
+        "z": "22bab773.c5f708",
+        "mydb": "7fb962ff.73d034",
+        "sqlquery": "msg.topic",
+        "sql": "select * from measurement_data where timestamp > $startdate and timestamp < $enddate",
+        "name": "query all data",
+        "x": 1260,
+        "y": 160,
+        "wires": [
+            [
+                "dab49d75.70a9f8",
+                "9967a5d6.d1483"
+            ]
+        ]
+    },
+    {
+        "id": "dab49d75.70a9f8",
+        "type": "debug",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1450,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "c8d52daa.7808f8",
+        "type": "debug",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 1270,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "45a80e8.e22b8f",
+        "type": "link in",
+        "z": "22bab773.c5f708",
+        "name": "dashboard-in",
+        "links": [
+            "929df70f.e6a64",
+            "8d38e3f6.735a9"
+        ],
+        "x": 555,
+        "y": 420,
+        "wires": [
+            [
+                "39d58735.4905c"
+            ]
+        ]
+    },
+    {
+        "id": "3e758bbc.4722cc",
+        "type": "function",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "func": "let start = msg.payload.startDate;\nlet end = msg.payload.endDate;\n\nmsg.topic = `select * from measurement_data where timestamp > ${start} and timestamp < ${end}`\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1110,
+        "y": 240,
+        "wires": [
+            [
+                "35ebb738.3f6a4",
+                "c8d52daa.7808f8"
+            ]
+        ]
+    },
+    {
+        "id": "929df70f.e6a64",
+        "type": "link out",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "links": [
+            "45a80e8.e22b8f"
+        ],
+        "x": 1575,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "9967a5d6.d1483",
+        "type": "change",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "queryResult",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1450,
+        "y": 220,
+        "wires": [
+            [
+                "929df70f.e6a64"
+            ]
+        ]
+    },
+    {
+        "id": "8fa39093.514b2",
+        "type": "inject",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "30",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 130,
+        "y": 340,
+        "wires": [
+            [
+                "18b282ee.13834d"
+            ]
+        ]
+    },
+    {
+        "id": "18b282ee.13834d",
+        "type": "function",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "func": "let data = '';\nlet max = randInt(0,6);\n\nfor (let i = 0; i < max; i++) {\n    data += `${msg.payload / 1000 + randInt(-2,2)},${Math.random()*randInt(1,5)},${randInt(0,4)}`;\n    \n    if (i + 1 != max) data += ';';\n}\n\nmsg.topic = 'bikeDetected';\nmsg.payload = data !== '' ? data : null;\n\n\nreturn msg;\n\nfunction randInt(min, max) {\n    return min + Math.floor((max - min) * Math.random());\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 190,
+        "y": 280,
+        "wires": [
+            [
+                "eea82ac7.eae608"
+            ]
+        ]
+    },
+    {
+        "id": "35129fc2.9570e",
+        "type": "switch",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "property": "uibuilderCtrl",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ready for content",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 970,
+        "y": 340,
+        "wires": [
+            [
+                "a74cdb41.14184"
+            ]
+        ]
+    },
+    {
+        "id": "a74cdb41.14184",
+        "type": "sqlite",
+        "z": "22bab773.c5f708",
+        "mydb": "7fb962ff.73d034",
+        "sqlquery": "fixed",
+        "sql": "select count() from measurement_data;",
+        "name": "get count",
+        "x": 1120,
+        "y": 340,
+        "wires": [
+            [
+                "7fac0462.22f5f4"
+            ]
+        ]
+    },
+    {
+        "id": "8d38e3f6.735a9",
+        "type": "link out",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "links": [
+            "45a80e8.e22b8f"
+        ],
+        "x": 1395,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "7fac0462.22f5f4",
+        "type": "function",
+        "z": "22bab773.c5f708",
+        "name": "",
+        "func": "let countObject = JSON.stringify(msg.payload[0]);\nlet payload = countObject.substring(countObject.indexOf(':') + 1, countObject.indexOf('}'));\n\nmsg = {\n    topic: 'bikeCount',\n    payload: payload\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1270,
+        "y": 340,
+        "wires": [
+            [
+                "8d38e3f6.735a9"
+            ]
+        ]
+    },
+    {
+        "id": "7fb962ff.73d034",
+        "type": "sqlitedb",
+        "z": "",
+        "db": "E:\\ch\\Documents\\TU\\DEF2\\sqlite\\def2.sqlite",
+        "mode": "RWC"
+    },
+    {
+        "id": "ce9b9d85.9fa9d",
+        "type": "particle-cloud",
+        "z": "",
+        "host": "https://api.particle.io",
+        "port": "443",
+        "accesstoken": "b85f377a95ab5094cd125c57424b4e92c572c623",
+        "name": "particle"
+    }
+]

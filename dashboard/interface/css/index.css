@@ -9,6 +9,23 @@ body {
     background-size: cover;
 }
 
+label {
+    margin-top: 5px;
+}
+
+.card, .card-deck {
+    margin-bottom: 30px;
+    border: none;
+}
+
+.velocity {
+    font-size: 40px;
+}
+
+.speed-unit {
+    font-size: 27px;
+}
+
 .container {
     margin-top: 20px;
 }

@@ -1,5 +1,7 @@
 SYSTEM_THREAD(ENABLED);
 
+SYSTEM_THREAD(ENABLED);
+
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
@@ -34,9 +36,6 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("test");
-    
-    //RGB.control(true);
-    //RGB.color(0, 0, 0);
 
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
@@ -159,7 +158,7 @@ void velocityMeasure(int i, int sensor)
             Serial.println(frontWheelTimeTwo);
             dt = frontWheelTimeTwo - frontWheelTime[i];
             frontWheelVelocity[i] = 1000 * dx / dt;
-            Serial.println(frontWheelVelocity[i]);
+            //Serial.println(frontWheelVelocity[i]);
         }
 
         else
