@@ -1,5 +1,3 @@
-"use strict";
-
 // constants
 const unitTexts = { // text to use in the UI for the given unit
     kmh: 'km/h',
@@ -23,6 +21,7 @@ let bikeCounter = 0;
 let startDate = getCookie('startdate') ? new Date(getCookie('startdate')) : null;
 let endDate = getCookie('enddate') ? new Date(getCookie('enddate')) : null;
 setUnit(getCookie('unit') || 'kmh', true);
+let lastVelocities = [];
 
 toastr.options = {
     "closeButton": false,
@@ -73,6 +72,9 @@ $(document).ready(function () {
                 bikeCounter = Number(msg.payload);
                 $('#counter').text(bikeCounter);
                 break;
+            case 'notify':
+                toastr[msg.payload.type](msg.payload.message);
+                break;
         }
 
         if (msg.topic == 'mqttValue') {
@@ -80,27 +82,20 @@ $(document).ready(function () {
         }
     })
 
-    function scaleVelocity(v, u) {
-        v = Number(v);
-        if (u == 'lytp') {
-            return (v * unitScales[u] / 1e-60).toFixed(1) + 'e-60';
-        } else {
-            return (v * unitScales[u]).toFixed(1);
-        }
-    }
-
     function bikeDetected(payload) {
-        if (payload.length == 0) toastr["info"]("length == 0")
+        if (payload.length == 0) toastr["info"]("length == 0");
 
-        for (let i = 0; i < payload.length; i++) {
-            let segment = payload[i].segment;
-            let time = new Date(Number(payload[i].timestamp * 1000));
-            let velocity = Number(payload[i].velocity);
-            let scaledVelocity = scaleVelocity(velocity, unit);
+        payload.forEach((p) => {
+            let segment = p.segment;
+            let time = new Date(Number(p.timestamp * 1000));
+            let velocity = Number(p.velocity);
+            let scaledVelocity = scaleVelocity(velocity);
             let absoluteVelocity = Math.abs(velocity);
 
             $(lastSpeedId + segment).text(scaledVelocity);
             $(lastTimeId + segment).text(`${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`);
+
+            lastVelocities[segment] = p.velocity;
 
             switch (segment) {
                 case '0':
@@ -116,7 +111,33 @@ $(document).ready(function () {
                     sparkline3.update(absoluteVelocity);
                     break;
             }
-        }
+        });
+
+        // for (let i = 0; i < payload.length; i++) {
+        //     let segment = payload[i].segment;
+        //     let time = new Date(Number(payload[i].timestamp * 1000));
+        //     let velocity = Number(payload[i].velocity);
+        //     let scaledVelocity = scaleVelocity(velocity, unit);
+        //     let absoluteVelocity = Math.abs(velocity);
+
+        //     $(lastSpeedId + segment).text(scaledVelocity);
+        //     $(lastTimeId + segment).text(`${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`);
+
+        //     switch (segment) {
+        //         case '0':
+        //             sparkline0.update(absoluteVelocity);
+        //             break;
+        //         case '1':
+        //             sparkline1.update(absoluteVelocity);
+        //             break;
+        //         case '2':
+        //             sparkline2.update(absoluteVelocity);
+        //             break;
+        //         case '3':
+        //             sparkline3.update(absoluteVelocity);
+        //             break;
+        //     }
+        // }
 
         // Change UI elements
         bikeCounter += payload.length;
@@ -138,7 +159,7 @@ $(document).ready(function () {
         }
     }
 
-}) // --- End of JQuery Ready --- //
+}); // --- End of JQuery Ready --- //
 
 function Sparkline(elementId) {
     this.ctx = document.getElementById(elementId);
@@ -205,14 +226,15 @@ function updatePreferences() {
 
     let unitSetting = document.getElementById('unit-select').value;
 
-    console.log(startDateSetting, startTimeSetting);
     startDate = new Date(startDateSetting + ' ' + startTimeSetting);
-    if (startDate == "Invalid Date" || endDate == "Invalid Date") {
+    endDate = new Date(endDateSetting + ' ' + endTimeSetting);
+
+    if ((startDate == "Invalid Date" || endDate == "Invalid Date") && (startDateSetting || endDateSetting)) {
         toastr["error"]("One or more of the dates you entered are invalid. Please set them again.");
         startDate = null;
         endDate = null;
     }
-    endDate = new Date(endDateSetting + ' ' + endTimeSetting);
+
     setUnit(unitSetting);
 
     setCookie('startdate', startDate);
@@ -237,7 +259,18 @@ function sendQuery() {
 }
 
 function setUnit(u, setFirstTime = false) {
+    unit = u;
     $('.speed-unit').html(unitTexts[u]);
+
+    if (!setFirstTime) {
+        for (let i = 0; i < lastVelocities.length; i++) {
+            if (lastVelocities[i]) {
+                scaledVelocity = scaleVelocity(lastVelocities[i]);
+                $(lastSpeedId + i).text(scaledVelocity);
+            }
+        }
+    }
+
     // let velocityInMperS = scaleVelocity(document.getElementById('last-speed').value, 'ms');
     // $('#last-speed').text(scaleVelocity(velocityInMperS, u));
 
@@ -247,10 +280,16 @@ function setUnit(u, setFirstTime = false) {
     //         $(lastSpeedId + i).text(scaleVelocity(lastSpeedInMs, u))
     //     }
     // }
-
-    unit = u;
 }
 
+function scaleVelocity(v, u = unit) {
+    v = Number(v);
+    if (u == 'lytp') {
+        return (v * unitScales[u] / 1e-60).toFixed(1) + 'e-60';
+    } else {
+        return (v * unitScales[u]).toFixed(1);
+    }
+}
 
 function setCookie(cname, cvalue) {
     document.cookie = cname + '=' + cvalue;
@@ -270,50 +309,3 @@ function getCookie(cname) {
     }
     return null;
 }
-
-function drawFrequentyGraph(){
-    let elem = new Element();
-    chart = new Chart(elem, {
-        type: 'line',
-        data: {
-            labels: ['', '', '', '', ''],
-            datasets: [{
-                data: [0, 0, 0, 0, 0],
-                backgroundColor: '#007bff',
-                borderColor: '#007bff',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            elements: {
-                point: {
-                    radius: 0
-                }
-            },
-            scales: {
-                xAxes: [{
-                    display: false
-                }],
-                yAxes: [{
-                    display: false,
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            },
-            legend: {
-                display: false
-            },
-            tooltips: {
-                enabled: false
-            },
-            animation: {
-                easing: 'easeOutQuint'
-            }
-        }
-    });
-}
-
-
