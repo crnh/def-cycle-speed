@@ -1,7 +1,5 @@
 SYSTEM_THREAD(ENABLED);
 
-SYSTEM_THREAD(ENABLED);
-
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
@@ -68,7 +66,7 @@ void loop()
 {
     for (int j = 0; j < 4; j++)
     {
-        if (millis() - frontWheelTime[j] > 1300 && frontWheelTime[j] != 0)
+        if (millis() - frontWheelTime[j] > timeout && frontWheelTime[j] != 0)
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetSegment(j);
             Serial.println("expire \n");
