@@ -4,17 +4,13 @@ const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
 const int timeout = 1000;              // maximum measurement time in microseconds
+const long connectTime = 180000;       //time allowed to get connection before timing out
+const long noConnectionSleepTime = 300000; //wait 5 minutes before re-connecting if no connection.
 const double dx = 1.0;                 // distance between both sensors in meters
 const unsigned long sleepTimeout = 100; // time to stay awake after measurement in seconds.
 
 Thread thread("publishThread", publishToCloud);
 
-// receive message
-
-
-//boolean hasFrontWheelPassedOne[] = {false, false, false, false};
-//boolean hasFrontWheelPassedBoth[] = {false, false, false, false};
-//boolean hasRearWheelPassedOne[] = {false, false, false, false};
 int firstSensor[] = {0, 0, 0, 0};
 
 unsigned long frontWheelTime[] = {0, 0, 0, 0};
@@ -34,6 +30,9 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("test");
+    
+    //RGB.control(true);
+    //RGB.color(0, 0, 0);
 
     pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
@@ -66,16 +65,16 @@ void loop()
 {
     for (int j = 0; j < 4; j++)
     {
-        if (millis() - frontWheelTime[j] > timeout && frontWheelTime[j] != 0)
+        if (millis() - frontWheelTime[j] > 3000 && frontWheelTime[j] != 0)
         { // een meting die langer duurt dan 3 seconden wordt afgebroken.
             resetSegment(j);
             Serial.println("expire \n");
         }
     }
-    if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals("") && WiFi.ready())
+    if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals("") && Cellular.ready())
     {
         Serial.println("sleep");
-        WiFi.off();
+        Cellular.off();
     }
     //Serial.println(".");
     delay(10);
@@ -207,51 +206,53 @@ void publishToCloud()
     int amountToSend;
     while (true)
     {
-        if(WiFi.ready() || !dataToSendArray[4].equals("")){ // De connectie wordt pas hersteld als er 5 fietsen gemeten zijn.
-            stringToSend = "";
-            amountToSend = 0;
-            for (int i = 0; i < length; i++)
-            { // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
-                if (dataToSendArray[i].equals("") || amountToSend >= 9)
-                {
-                    break;
-                }
-                stringToSend += dataToSendArray[i];
-                amountToSend++;
-                if (dataToSendArray[i + 1].equals("") || amountToSend >= 9)
-                {
-                    break;
-                }
-                else
-                {
-                    stringToSend += ";";
-                }
-            }
-            for (int i = 0; i < length - amountToSend; i++)
-            { // dataToSendArray elements are shifed to the left
-                dataToSendArray[i] = dataToSendArray[i + amountToSend];
-            }
-            for (int i = length - amountToSend; i < length; i++)
-            { // last places will be cleared
-                dataToSendArray[i] = "";
-            }
-            if (amountToSend > 0)
-            {   
-                if(!WiFi.ready()){
-                    WiFi.on();
-                    while(!WiFi.ready()){
-                        unsigned long connectTime = millis();
-                        while(millis() - connectTime < 120000){
-                            WiFi.connect();
-                            delay(200);
-                        }
-                        delay(600000);
-                    }
-                }
-                Particle.publish(datatopic, stringToSend);
+        if(!Cellular.ready() && !dataToSendArray[4].equals("")){ // The connection will be restarted if 5 or more bikes are detected.
+            Serial.println("trying to connect");
+            Cellular.connect();
+            unsigned long startConnecting = millis();
+            while((!Cellular.ready()) && ((millis() - startConnecting) < connectTime) ){
             }
         }
-        delay(1200);
+        if (Cellular.ready()){
+            if(!dataToSendArray[0].equals("")){ // if there is data available, send it
+                stringToSend = "";
+                amountToSend = 0;
+                for (int i = 0; i < length; i++)
+                { // Up till 9 strings from dataToSendArray are combined in stringToSend, seperated by a comma
+                    if (dataToSendArray[i].equals("") || amountToSend >= 9)
+                    {
+                        break;
+                    }
+                    stringToSend += dataToSendArray[i];
+                    amountToSend++;
+                    if (dataToSendArray[i + 1].equals("") || amountToSend >= 9)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        stringToSend += ";";
+                    }
+                }
+                for (int i = 0; i < length - amountToSend; i++)
+                { // dataToSendArray elements are shifed to the left
+                    dataToSendArray[i] = dataToSendArray[i + amountToSend];
+                }
+                for (int i = length - amountToSend; i < length; i++)
+                { // last places will be cleared
+                    dataToSendArray[i] = "";
+                }
+                if (amountToSend > 0)
+                {   
+                    Particle.publish(datatopic, stringToSend);
+                    delay(10000);
+                } 
+            }
+        } 
+        else 
+        {
+            delay(noConnectionSleepTime);
+        }
     }
 }
 
@@ -266,4 +267,3 @@ void resetSegment(int i)
 
     frontWheelVelocity[i] = 0.0;
 }
-
