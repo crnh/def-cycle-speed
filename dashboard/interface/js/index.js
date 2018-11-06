@@ -75,6 +75,9 @@ $(document).ready(function () {
             case 'notify':
                 toastr[msg.payload.type](msg.payload.message);
                 break;
+            case 'status':
+                $('#status').text(msg.payload);
+                break;
         }
 
         if (msg.topic == 'mqttValue') {
