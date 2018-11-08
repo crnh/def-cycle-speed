@@ -3,11 +3,12 @@ SYSTEM_THREAD(ENABLED);
 const char datatopic[] = "bike/data";
 const char statustopic[] = "bike/status";
 
-const int timeout = 1000;              // maximum measurement time in microseconds
-const long connectTime = 180000;       //time allowed to get connection before timing out
-const long noConnectionSleepTime = 300000; //wait 5 minutes before re-connecting if no connection.
-const double dx = 1.0;                 // distance between both sensors in meters
-const unsigned long sleepTimeout = 100; // time to stay awake after measurement in seconds.
+const int timeout = 1000;                       // maximum measurement time in microseconds
+const long connectTime = 180000;                //time allowed to get connection before timing out
+const int minimumTimeBetweenPublishes = 1100;   // minimum time between two publishes to the Particle Cloud
+const long noConnectionSleepTime = 300000;      //wait 5 minutes before re-connecting if no connection.
+const double dx = 1.0;                          // distance between both sensors in meters
+const unsigned long sleepTimeout = 100;         // time to stay awake after measurement in seconds.
 
 Thread thread("publishThread", publishToCloud);
 
@@ -34,24 +35,23 @@ void setup()
     //RGB.control(true);
     //RGB.color(0, 0, 0);
 
-    pinMode(D1, INPUT_PULLUP);
     pinMode(D2, INPUT_PULLUP);
-    pinMode(D3, INPUT_PULLUP);
+    pinMode(A2, INPUT_PULLUP);
+    pinMode(D1, INPUT_PULLUP);
     pinMode(D4, INPUT_PULLUP);
     pinMode(D5, INPUT_PULLUP);
     pinMode(D6, INPUT_PULLUP);
-    pinMode(D7, INPUT_PULLUP);
-    pinMode(A2, INPUT_PULLUP);
-    pinMode(RX, INPUT_PULLUP);
+    pinMode(B0, INPUT_PULLUP);
+    pinMode(D3, INPUT_PULLUP);
 
-    attachInterrupt(D1, velocityMeasure0A, FALLING);
-    attachInterrupt(D2, velocityMeasure0B, FALLING);
-    attachInterrupt(D3, velocityMeasure1A, FALLING);
+    attachInterrupt(D2, velocityMeasure0A, FALLING);
+    attachInterrupt(A2, velocityMeasure0B, FALLING);
+    attachInterrupt(D1, velocityMeasure1A, FALLING);
     attachInterrupt(D4, velocityMeasure1B, FALLING);
     attachInterrupt(D5, velocityMeasure2A, FALLING);
     attachInterrupt(D6, velocityMeasure2B, FALLING);
-    attachInterrupt(D7, velocityMeasure3A, FALLING);
-    attachInterrupt(A2, velocityMeasure3B, FALLING);
+    attachInterrupt(B0, velocityMeasure3A, FALLING);
+    attachInterrupt(D3, velocityMeasure3B, FALLING);
 
     for (int i = 0; i < 128; i++)
     {
@@ -74,6 +74,8 @@ void loop()
     if (Time.now() - lastMeasurementTime > sleepTimeout && dataToSendArray[0].equals("") && Cellular.ready())
     {
         Serial.println("sleep");
+        Particle.publish(statustopic, "sleeping");
+        delay(1000);
         Cellular.off();
     }
     //Serial.println(".");
@@ -215,6 +217,7 @@ void publishToCloud()
         }
         if (Cellular.ready()){
             if(!dataToSendArray[0].equals("")){ // if there is data available, send it
+                Serial.println("sending data");
                 stringToSend = "";
                 amountToSend = 0;
                 for (int i = 0; i < length; i++)
@@ -245,13 +248,14 @@ void publishToCloud()
                 if (amountToSend > 0)
                 {   
                     Particle.publish(datatopic, stringToSend);
-                    delay(10000);
+                    delay(minimumTimeBetweenPublishes);
                 } 
             }
         } 
         else 
         {
-            delay(noConnectionSleepTime);
+            Serial.println("waiting 10 secs before checking again");
+            delay(10000);
         }
     }
 }
